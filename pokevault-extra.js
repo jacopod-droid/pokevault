@@ -256,7 +256,7 @@
   // ---------- Backup con set personalizzati ----------
   exportCollection = function () {
     try {
-      const blob = new Blob([JSON.stringify({ version: 3, exportedAt: new Date().toISOString(), cards: ownedCardsMap, customSets }, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify({ version: 3, exportedAt: new Date().toISOString(), cards: ownedCardsMap, customSets, overrides: ov }, null, 2)], { type: 'application/json' });
       const u = URL.createObjectURL(blob), a = document.createElement('a');
       a.href = u; a.download = `pokellector-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u);
@@ -268,11 +268,154 @@
     const f = ev.target.files[0]; if (!f) return;
     const r = new FileReader();
     r.onload = () => {
-      try { const p = JSON.parse(r.result); if (p && Array.isArray(p.customSets)) { customSets = p.customSets; saveCustom(); } } catch {}
+      try { const p = JSON.parse(r.result); if (p && Array.isArray(p.customSets)) { customSets = p.customSets; saveCustom(); } if (p && p.overrides) { ov = Object.assign({ sets: {}, cards: {} }, p.overrides); saveOv(); } } catch {}
       _imp({ target: { files: [f], value: '' } }); ev.target.value = '';
     };
     r.readAsText(f);
   };
+
+  // ---------- Modifica nomi e immagini (set e carte) ----------
+  let ov = { sets: {}, cards: {} }, ed = null;
+  const saveOv = () => kvSet('overrides', ov);
+  function applySet(s) {
+    if (s._on === undefined) { s._on = s.name; s._ol = s.images && s.images.symbol; }
+    const o = ov.sets[s.id] || {};
+    s.name = o.name || s._on; s.images = Object.assign({}, s.images, { symbol: o.logo || s._ol });
+  }
+  const applyAllSets = () => allSets.concat(jpSets).forEach(applySet);
+  function applyCards(a) { a.forEach(c => { const o = ov.cards[c.id]; if (o) { if (o.name) c.name = o.name; if (o.image) c.images = { small: o.image, large: o.image }; } }); }
+  const findCustomCard = id => { for (const cs of customSets) { const c = cs.cards.find(x => x.id === id); if (c) return { cs, c }; } return null; };
+
+  const _r2 = renderSeriesDirectory;
+  renderSeriesDirectory = function () { applyAllSets(); _r2(); };
+  const _o2 = openSetDetail;
+  openSetDetail = function (id) {
+    applyAllSets();
+    const r = _o2(id);
+    if (id.startsWith('custom:')) { const cs = customSets.find(c => c.id === id); if (cs && cs.logo) { currentSet.images.symbol = cs.logo; $('detailSetSymbol').src = cs.logo; } }
+    return r;
+  };
+  const _lc = loadCardsForSet;
+  loadCardsForSet = async function (id) { await _lc(id); applyCards(currentSetCards); };
+
+  const fileToData = (f, max) => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas');
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        res(f.type === 'image/png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', .82));
+      };
+      im.onerror = rej; im.src = r.result;
+    };
+    r.onerror = rej; r.readAsDataURL(f);
+  });
+  const setImg = v => { ed.image = v; $('edPrev').src = v || ph(); };
+  async function takeFile(f) {
+    if (!f.type.startsWith('image/')) return showToast('Il file non è un\'immagine.', 'error');
+    try { setImg(await fileToData(f, ed.type === 'set' ? 240 : 500)); $('edUrl').value = ''; } catch { showToast('Immagine non leggibile.', 'error'); }
+  }
+  function closeEdit() { $('editModal').classList.add('hidden'); $('editModal').classList.remove('flex'); }
+  window.pvEditClose = closeEdit;
+  window.pvEdit = type => {
+    let name, img, canReset = true;
+    if (type === 'set') { if (!currentSet) return; name = currentSet.name; img = currentSet.images && currentSet.images.symbol; canReset = !currentSet.custom; }
+    else { const c = currentModalCardObj; if (!c) return; name = c.name; img = c.images && (c.images.large || c.images.small); canReset = !findCustomCard(c.id); }
+    ed = { type, image: img || '' };
+    $('edTitle').textContent = type === 'set' ? 'Modifica set' : 'Modifica carta';
+    $('edName').value = name; $('edUrl').value = /^https?:/.test(ed.image) ? ed.image : ''; $('edPrev').src = ed.image || ph();
+    $('edReset').classList.toggle('hidden', !canReset);
+    $('editModal').classList.remove('hidden'); $('editModal').classList.add('flex'); $('edName').focus();
+  };
+  function afterCardEdit() {
+    if (currentSet) { if (currentSet.custom) refreshCustom(); else { applyCards(currentSetCards); updateSetDetailHeaderStats(); renderSetCardsGrid(); } }
+    if (!$('viewCollection').classList.contains('hidden')) renderOwnedCollection();
+  }
+  function syncSetHeader() {
+    Object.values(ownedCardsMap).forEach(c => { if (c.setId === currentSet.id) c.setName = currentSet.name; });
+    saveCollectionToStorage();
+    $('detailSetName').textContent = currentSet.name; $('detailSetSymbol').src = (currentSet.images && currentSet.images.symbol) || ph();
+  }
+  window.pvEditSave = e => {
+    e.preventDefault();
+    const name = $('edName').value.trim(), img = ed.image; if (!name) return;
+    if (ed.type === 'set') {
+      const cs = currentSet.custom && getCS();
+      if (cs) { cs.name = name; if (img) cs.logo = img; saveCustom(); currentSet.name = name; currentSet.images.symbol = img || ph('🧩'); }
+      else { ov.sets[currentSet.id] = { name, logo: img }; saveOv(); applySet(currentSet); }
+      syncSetHeader();
+    } else {
+      const c = currentModalCardObj, f = findCustomCard(c.id);
+      if (f) { f.c.name = name; f.c.image = img; saveCustom(); } else { ov.cards[c.id] = { name, image: img }; saveOv(); }
+      c.name = name; c.images = { small: img || ph(), large: img || ph() };
+      if (ownedCardsMap[c.id]) { ownedCardsMap[c.id].name = name; ownedCardsMap[c.id].image = img; saveCollectionToStorage(); }
+      $('modalCardTitle').textContent = name; $('modalCardImage').src = img || ph();
+      afterCardEdit();
+    }
+    closeEdit(); showToast('Modifiche salvate!', 'success');
+  };
+  window.pvEditReset = async () => {
+    if (ed.type === 'set') { delete ov.sets[currentSet.id]; saveOv(); applySet(currentSet); syncSetHeader(); }
+    else {
+      const id = currentModalCardObj.id; delete ov.cards[id]; saveOv();
+      if (currentSet && !currentSet.custom) {
+        await loadCardsForSet(currentSet.id);
+        const o = currentSetCards.find(x => x.id === id);
+        if (o) {
+          currentModalCardObj = o; $('modalCardTitle').textContent = o.name; $('modalCardImage').src = o.images.large || o.images.small;
+          if (ownedCardsMap[id]) { ownedCardsMap[id].name = o.name; ownedCardsMap[id].image = o.images.large || o.images.small; saveCollectionToStorage(); }
+        }
+        updateSetDetailHeaderStats(); renderSetCardsGrid();
+      } else showToast('Apri il set di origine e ricarica per vedere l\'originale.', 'info');
+    }
+    closeEdit(); showToast('Ripristinato l\'originale.', 'info');
+  };
+
+  async function initEdit() {
+    const m = document.createElement('div');
+    m.id = 'editModal'; m.className = 'fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 overflow-y-auto';
+    m.innerHTML = `<form onsubmit="pvEditSave(event)" class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto">
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
+        <h2 id="edTitle" class="text-lg font-extrabold text-slate-900 dark:text-white">Modifica</h2>
+        <button type="button" onclick="pvEditClose()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none">✕</button></div>
+      <div class="p-6 space-y-4">
+        <div><label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Nome</label><input id="edName" required maxlength="80" class="${inp} w-full"></div>
+        <div id="edDrop" class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-4 text-center cursor-pointer hover:border-pokeBlue transition">
+          <img id="edPrev" alt="" class="mx-auto max-h-44 object-contain rounded-lg mb-2">
+          <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Trascina qui un'immagine oppure clicca per sceglierla</p></div>
+        <input type="file" id="edFile" accept="image/*" class="hidden">
+        <input id="edUrl" placeholder="…oppure incolla l'URL di un'immagine" class="${inp} w-full">
+      </div>
+      <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-end gap-2">
+        <button type="button" id="edReset" onclick="pvEditReset()" class="mr-auto px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">↺ Originale</button>
+        <button type="button" onclick="pvEditClose()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Annulla</button>
+        <button class="px-5 py-2 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">Salva</button></div></form>`;
+    document.body.appendChild(m);
+    const dz = $('edDrop'), hi = ['border-pokeBlue', 'bg-blue-50', 'dark:bg-slate-800'];
+    dz.onclick = () => $('edFile').click();
+    ['dragenter', 'dragover'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.add(...hi); }));
+    ['dragleave', 'drop'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.remove(...hi); }));
+    dz.addEventListener('drop', e => {
+      const f = e.dataTransfer.files[0]; if (f) return takeFile(f);
+      const u = (e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain') || '').trim();
+      if (/^https?:\/\//.test(u)) { $('edUrl').value = u; setImg(u); }
+    });
+    $('edFile').onchange = e => { if (e.target.files[0]) takeFile(e.target.files[0]); e.target.value = ''; };
+    $('edUrl').oninput = e => { const u = e.target.value.trim(); if (/^https?:\/\//.test(u)) setImg(u); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
+
+    const bs = document.createElement('button');
+    bs.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition';
+    bs.textContent = '✏️ Modifica set'; bs.onclick = () => pvEdit('set'); $('setFilterAllBtn').parentElement.appendChild(bs);
+    const bc = document.createElement('button');
+    bc.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition';
+    bc.textContent = '✏️ Modifica'; bc.onclick = () => pvEdit('card'); $('modalCardTitle').parentElement.appendChild(bc);
+
+    const saved = await kvGet('overrides');
+    if (saved) { ov = Object.assign({ sets: {}, cards: {} }, saved); if (!currentSet && !$('viewSets').classList.contains('hidden')) renderSeriesDirectory(); }
+  }
 
   // ---------- Inizializzazione UI ----------
   function init() {
@@ -315,7 +458,7 @@
       </div></div>`;
     document.body.appendChild(m);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') pvCloseAdd(); });
-    paintBar();
+    paintBar(); initEdit();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
