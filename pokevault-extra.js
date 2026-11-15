@@ -417,6 +417,208 @@
     if (saved) { ov = Object.assign({ sets: {}, cards: {} }, saved); if (!currentSet && !$('viewSets').classList.contains('hidden')) renderSeriesDirectory(); }
   }
 
+  // ---------- Quantità, prezzi, backup, statistiche, vista Pokémon, mancanti ----------
+  let prices = {}, pkRes = [], snapT;
+  const qtyOf = c => Math.max(1, +c.qty || 1);
+  const eur = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
+  const isWest = id => !/^(jp:|manual-|custom|imp-|legacy-)/.test(id) && !id.includes('#');
+  const csvCell = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const download = (name, text, type) => { const u = URL.createObjectURL(new Blob(['\ufeff' + text], { type })), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1000); };
+  const lbl = 'block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1';
+
+  // --- Quantità / duplicati ---
+  const _ocd = openCardDetailModal;
+  openCardDetailModal = function (id) { _ocd(id); const o = ownedCardsMap[id]; $('pvQty').value = o ? qtyOf(o) : 1; mktBox(); };
+  const _scd = saveCardDetail;
+  saveCardDetail = function (e) {
+    const c = currentModalCardObj, q = Math.max(1, parseInt($('pvQty').value, 10) || 1);
+    _scd(e);
+    if (c && ownedCardsMap[c.id]) { ownedCardsMap[c.id].qty = q; saveCollectionToStorage(); }
+    if (currentSet) { updateSetDetailHeaderStats(); renderSetCardsGrid(); }
+    if (region === 'pokemon') renderPokemon();
+    if (!$('viewCollection').classList.contains('hidden')) renderOwnedCollection();
+  };
+  const _g3 = renderSetCardsGrid;
+  renderSetCardsGrid = function () {
+    _g3();
+    $('setCardsGrid').querySelectorAll(':scope > div').forEach(w => {
+      const b = w.querySelector('button[onclick^="quickToggleCardFlag"]'), m = b && b.getAttribute('onclick').match(/'([^']+)'/), o = m && ownedCardsMap[m[1]];
+      if (o && qtyOf(o) > 1) { const s = document.createElement('span'); s.textContent = '×' + qtyOf(o); s.className = 'absolute bottom-14 left-3 z-20 px-1.5 py-0.5 rounded-md bg-pokeYellow text-slate-900 text-[11px] font-extrabold shadow'; w.appendChild(s); }
+    });
+  };
+
+  // --- Prezzi di mercato (Cardmarket via pokemontcg.io; link Cardmarket + Cardtrader) ---
+  const cmLink = c => (prices[c.id] && prices[c.id].url) || `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(c.name + ' ' + c.number)}`;
+  const ctLink = c => `https://www.cardtrader.com/en/search?query=${encodeURIComponent(c.name + ' ' + c.number)}`;
+  function mktBox() {
+    const c = currentModalCardObj, el = $('pvMkt'); if (!c || !el) return;
+    const p = prices[c.id], a = 'target="_blank" rel="noopener" class="text-pokeBlue hover:underline"';
+    el.innerHTML = `<div class="flex items-center justify-between gap-2"><span class="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">Prezzi di mercato</span><button type="button" onclick="pvLoadPrice()" class="text-[11px] font-bold text-pokeBlue hover:underline">${p ? '↻ Aggiorna' : 'Carica prezzo'}</button></div>
+      ${p ? `<p class="text-xs text-slate-600 dark:text-slate-300 mt-1">Cardmarket: tendenza <b>${eur(p.trend)}</b> • medio <b>${eur(p.avg)}</b> • da <b>${eur(p.low)}</b> <button type="button" onclick="pvApplyPrice()" class="ml-1 underline font-bold">usa come prezzo</button></p>` : '<p class="text-[11px] text-slate-400 mt-1">Prezzo non caricato (disponibile per le carte occidentali del catalogo).</p>'}
+      <div class="flex gap-4 mt-1.5 text-[11px] font-bold"><a href="${esc(cmLink(c))}" ${a}>Cardmarket ↗</a><a href="${esc(ctLink(c))}" ${a}>Cardtrader ↗</a></div>`;
+  }
+  async function fetchPrices(ids) {
+    for (let i = 0; i < ids.length; i += 25) {
+      const q = ids.slice(i, i + 25).map(x => 'id:' + x).join(' OR ');
+      const j = await getJson(`${API_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=25&select=id,cardmarket`, 2);
+      (j.data || []).forEach(c => { const m = c.cardmarket; if (m && m.prices) prices[c.id] = { trend: m.prices.trendPrice, avg: m.prices.averageSellPrice, low: m.prices.lowPrice, url: m.url, t: Date.now() }; });
+    }
+    kvSet('prices', prices);
+  }
+  window.pvLoadPrice = async () => {
+    const c = currentModalCardObj; if (!c) return;
+    if (!isWest(c.id)) return showToast('Prezzi automatici solo per le carte occidentali del catalogo: usa i link.', 'info');
+    try { await fetchPrices([c.id]); mktBox(); if (!prices[c.id]) showToast('Nessun prezzo Cardmarket per questa carta.', 'info'); } catch { showToast('Prezzo non disponibile ora.', 'error'); }
+  };
+  window.pvApplyPrice = () => { const p = prices[currentModalCardObj.id]; if (p) $('detailPrice').value = (p.trend || p.avg || 0).toFixed(2); };
+  window.pvUpdateAll = async () => {
+    const ids = Object.keys(ownedCardsMap).filter(isWest); if (!ids.length) return showToast('Nessuna carta occidentale da aggiornare.', 'info');
+    showToast('Aggiornamento prezzi in corso…', 'info');
+    try { await fetchPrices(ids); showToast('Prezzi Cardmarket aggiornati!', 'success'); } catch { showToast('Aggiornamento non riuscito o parziale.', 'error'); }
+    renderStats();
+  };
+
+  // --- Backup sicuro ---
+  async function snapshot() {
+    const n = Object.keys(ownedCardsMap).length; if (!n) return;
+    const day = new Date().toISOString().slice(0, 10); let s = ((await kvGet('snaps')) || []).filter(x => x.day !== day);
+    s.unshift({ day, t: Date.now(), n, cards: ownedCardsMap, customSets, overrides: ov });
+    await kvSet('snaps', s.slice(0, 7)); if (!$('viewCollection').classList.contains('hidden')) renderSnaps();
+  }
+  const _sc = saveCollectionToStorage;
+  saveCollectionToStorage = function () { _sc(); clearTimeout(snapT); snapT = setTimeout(snapshot, 4000); paintBanner(); };
+  const _ex = exportCollection;
+  exportCollection = function () { _ex(); localStorage.setItem('pv_last_export', Date.now()); paintBanner(); };
+  function paintBanner() {
+    const b = $('pvBanner'); if (!b) return;
+    const last = +localStorage.getItem('pv_last_export') || 0, d = Math.floor((Date.now() - last) / 864e5);
+    b.classList.toggle('hidden', !(Object.keys(ownedCardsMap).length && (!last || d >= 14)));
+    b.querySelector('span').textContent = last ? `Ultimo backup scaricato ${d} giorni fa.` : 'Non hai ancora scaricato nessun backup della collezione.';
+  }
+  async function renderSnaps() {
+    const s = (await kvGet('snaps')) || [], el = $('pvSnaps'); if (!el) return;
+    el.innerHTML = `<p class="${lbl}">Backup automatici (ultimi 7 giorni)</p>` + (s.length ? s.map((x, i) => `<div class="flex items-center justify-between text-xs py-1 border-b border-slate-100 dark:border-slate-800"><span>${formatDateIT(x.day)} • ${x.n} carte</span><button onclick="pvRestore(${i})" class="font-bold text-pokeBlue hover:underline">Ripristina</button></div>`).join('') : '<p class="text-xs text-slate-400">Nessuno snapshot ancora: se ne salva uno al giorno a ogni modifica.</p>');
+  }
+  window.pvRestore = async i => {
+    const x = ((await kvGet('snaps')) || [])[i];
+    if (!x || !confirm(`Ripristinare lo snapshot del ${formatDateIT(x.day)} (${x.n} carte)? La collezione attuale verrà sostituita.`)) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(x.cards)); customSets = x.customSets || []; saveCustom();
+    await kvSet('overrides', x.overrides || { sets: {}, cards: {} }); location.reload();
+  };
+  window.pvCsv = () => {
+    const rows = [['Set', 'Numero', 'Nome', 'Condizione', 'Variante', 'Quantità', 'Prezzo pagato (€)', 'Data acquisto', 'Tendenza Cardmarket (€)']];
+    Object.values(ownedCardsMap).forEach(c => rows.push([c.setName, c.number, c.name, c.condition, c.variant, qtyOf(c), c.price, c.purchaseDate, prices[c.id] ? prices[c.id].trend : '']));
+    download(`collezione-${new Date().toISOString().slice(0, 10)}.csv`, rows.map(r => r.map(csvCell).join(';')).join('\n'), 'text/csv');
+  };
+
+  // --- Statistiche e grafici ---
+  function renderStats() {
+    const el = $('pvStats'); if (!el) return;
+    const list = Object.values(ownedCardsMap), sum = (a, f) => a.reduce((t, c) => t + f(c), 0);
+    const copies = sum(list, qtyOf), spent = sum(list, c => (+c.price || 0) * qtyOf(c));
+    const pr = list.filter(c => prices[c.id] && prices[c.id].trend != null), market = sum(pr, c => prices[c.id].trend * qtyOf(c)), paid = sum(pr, c => (+c.price || 0) * qtyOf(c));
+    const dups = list.filter(c => qtyOf(c) > 1).length, diff = market - paid;
+    const k = (l, v, s) => `<div class="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-3"><p class="text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">${l}</p><p class="text-lg font-extrabold text-slate-900 dark:text-white">${v}</p><p class="text-[11px] text-slate-400">${s || ''}</p></div>`;
+    const group = (kf, wf) => { const m = {}; list.forEach(c => { const x = kf(c) || 'N/D'; m[x] = (m[x] || 0) + wf(c); }); return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8); };
+    const bars = (t, rows, f = x => x) => { const mx = Math.max(1, ...rows.map(r => r[1])); return `<div class="space-y-1.5"><p class="${lbl}">${t}</p>${rows.map(([l, v]) => `<div class="flex items-center gap-2 text-[11px]"><span class="w-28 truncate text-slate-600 dark:text-slate-300" title="${esc(l)}">${esc(l)}</span><div class="flex-1 h-2 rounded bg-slate-200 dark:bg-slate-700"><div class="h-full rounded bg-pokeBlue" style="width:${v / mx * 100}%"></div></div><span class="w-14 text-right font-bold text-slate-800 dark:text-slate-200">${f(v)}</span></div>`).join('') || '<p class="text-xs text-slate-400">Nessun dato</p>'}</div>`; };
+    const mo = {}; list.forEach(c => { const d = (c.purchaseDate || new Date(c.updatedAt || Date.now()).toISOString()).slice(0, 7); mo[d] = (mo[d] || 0) + qtyOf(c); });
+    const ks = Object.keys(mo).sort(); let cum = 0; const pts = ks.map(x => (cum += mo[x]));
+    const line = pts.map((v, i) => `${pts.length > 1 ? 4 + i / (pts.length - 1) * 292 : 150},${76 - v / cum * 68}`).join(' ');
+    const growth = `<div><p class="${lbl}">Crescita collezione (copie cumulate)</p><svg viewBox="0 0 300 84" class="w-full h-24"><polyline points="${line}" fill="none" stroke="#2A75BB" stroke-width="2.5" stroke-linejoin="round"/></svg><div class="flex justify-between text-[10px] text-slate-400"><span>${ks[0] || ''}</span><span>${ks[ks.length - 1] || ''}</span></div></div>`;
+    el.innerHTML = `<div class="grid grid-cols-2 lg:grid-cols-5 gap-3">${k('Copie totali', copies, list.length + ' carte uniche')}${k('Doppioni', dups, 'carte con più copie')}${k('Spesa registrata', eur(spent))}${k('Valore Cardmarket', eur(market), pr.length + ' carte con prezzo')}${k('Differenza', (diff >= 0 ? '+' : '') + eur(diff), 'mercato − pagato (solo carte con prezzo)')}</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">${bars('Per rarità (copie)', group(c => c.rarity, qtyOf))}${bars('Per set (copie)', group(c => c.setName, qtyOf))}${bars('Carte di maggior valore (tendenza)', pr.map(c => [c.name, prices[c.id].trend]).sort((a, b) => b[1] - a[1]).slice(0, 8), eur)}${growth}</div>`;
+  }
+  const _roc = renderOwnedCollection;
+  renderOwnedCollection = function () { _roc(); renderStats(); };
+  const _sv = switchView;
+  switchView = function (v) { _sv(v); if (v === 'collection') renderSnaps(); };
+
+  // --- Vista per Pokémon ---
+  const _pr = window.pvRegion;
+  window.pvRegion = async r => {
+    if (r !== 'pokemon') { $('pokemonView').classList.add('hidden'); return _pr(r); }
+    region = r; paintBar();
+    if (currentSet) { currentSet = null; currentSetCards = []; $('setDetailView').classList.add('hidden'); $('customToolbar').classList.add('hidden'); }
+    $('customSetsView').classList.add('hidden'); $('setsDirectoryView').classList.add('hidden'); $('pokemonView').classList.remove('hidden'); renderPokemon();
+  };
+  window.pvPokeSearch = async e => {
+    e.preventDefault();
+    const q = $('pkQuery').value.trim(); if (!q) return;
+    $('pkSummary').textContent = 'Ricerca in corso…'; $('pkGrid').innerHTML = '';
+    try {
+      if ($('pkSource').value === 'jp') {
+        const j = await getJson(`${TCGDEX}/ja/cards?name=${encodeURIComponent(q)}`, 2);
+        pkRes = (Array.isArray(j) ? j : []).map(c => { const sid = c.id.slice(0, c.id.length - String(c.localId).length - 1), st = jpSets.find(s => s.id === 'jp:' + sid); return { id: 'jp:' + c.id, name: c.name, number: c.localId, rarity: '', images: imgs(c.image), set: { id: 'jp:' + sid, name: st ? st.name : sid, series: st ? st.series : '🇯🇵 Altro' } }; });
+      } else {
+        const j = await getJson(`${API_BASE}/cards?q=${encodeURIComponent(`name:"${q}*"`)}&pageSize=250&select=id,name,number,rarity,artist,images,set`, 2);
+        pkRes = (j.data || []).sort((a, b) => (a.set.releaseDate || '').localeCompare(b.set.releaseDate || ''));
+      }
+    } catch { pkRes = []; showToast('Ricerca non riuscita, riprova.', 'error'); }
+    applyCards(pkRes); currentSetCards = pkRes; renderPokemon();
+  };
+  function renderPokemon() {
+    if (!$('pkGrid')) return;
+    const own = pkRes.filter(c => ownedCardsMap[c.id]).length;
+    $('pkSummary').innerHTML = pkRes.length ? `<b>${own}</b> possedute su <b>${pkRes.length}</b> carte trovate (${Math.round(own / pkRes.length * 100)}%)` : '';
+    $('pkGrid').innerHTML = pkRes.map((c, i) => {
+      const o = ownedCardsMap[c.id], im = (c.images && (c.images.small || c.images.large)) || ph();
+      return `<div class="relative bg-white dark:bg-slate-900 rounded-xl p-2 border ${o ? 'border-emerald-500' : 'border-slate-200 dark:border-slate-800'}">
+        <button onclick="pvPokeToggle(${i})" class="absolute top-3 right-3 z-20 w-7 h-7 rounded-full flex items-center justify-center shadow-md text-sm ${o ? 'bg-emerald-500 text-white' : 'bg-slate-900/70 text-slate-200 hover:bg-emerald-500'}">✓</button>
+        <div onclick="openCardDetailModal('${c.id}')" class="cursor-pointer"><div class="aspect-[2.5/3.5] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800"><img src="${esc(im)}" loading="lazy" alt="${esc(c.name)}" class="w-full h-full object-contain ${o ? 'card-owned' : 'card-unowned'}"></div>
+        <p class="text-xs font-extrabold truncate mt-2 text-slate-900 dark:text-white">${esc(c.name)}${o && qtyOf(o) > 1 ? ' ×' + qtyOf(o) : ''}</p><p class="text-[10px] text-slate-500 truncate">#${esc(c.number)} • ${esc(c.set ? c.set.name : '')}</p></div></div>`;
+    }).join('');
+  }
+  window.pvPokeToggle = i => {
+    const c = pkRes[i];
+    if (ownedCardsMap[c.id]) delete ownedCardsMap[c.id];
+    else ownedCardsMap[c.id] = { id: c.id, name: c.name, number: c.number, setId: c.set.id, setName: c.set.name, series: c.set.series || 'Other', rarity: c.rarity || 'Comune', image: (c.images && (c.images.large || c.images.small)) || '', condition: 'Near Mint', price: 0, purchaseDate: new Date().toISOString().split('T')[0], variant: 'Normale', qty: 1, updatedAt: Date.now() };
+    saveCollectionToStorage(); renderPokemon();
+  };
+
+  // --- Lista dei mancanti ---
+  window.pvMissing = () => {
+    if (!currentSet) return;
+    const miss = currentSetCards.filter(c => !ownedCardsMap[c.id]);
+    $('pvMissTxt').value = `Carte mancanti – ${currentSet.name} (${miss.length}/${currentSetCards.length})\n\n` + miss.map(c => `☐ #${c.number}  ${c.name}`).join('\n');
+    $('pvMissModal').classList.remove('hidden'); $('pvMissModal').classList.add('flex');
+  };
+  window.pvMissClose = () => { $('pvMissModal').classList.add('hidden'); $('pvMissModal').classList.remove('flex'); };
+  window.pvMissCopy = () => navigator.clipboard.writeText($('pvMissTxt').value).then(() => showToast('Lista copiata!', 'success'));
+  window.pvMissTxtDl = () => download('carte-mancanti.txt', $('pvMissTxt').value, 'text/plain');
+  window.pvMissPrint = () => { const w = window.open('', '_blank'); if (!w) return; w.document.write(`<pre style="font:15px/1.8 sans-serif;white-space:pre-wrap">${esc($('pvMissTxt').value)}</pre>`); w.document.close(); w.print(); };
+
+  async function initFeatures() {
+    const btn = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition';
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+    prices = (await kvGet('prices')) || {};
+    // Quantità + prezzi nel dettaglio carta
+    $('detailVariant').parentElement.insertAdjacentHTML('afterend', `<div><label class="${lbl}" for="pvQty">Quantità</label><input type="number" id="pvQty" min="1" step="1" value="1" class="${inp} w-full"></div>`);
+    $('detailCardForm').lastElementChild.insertAdjacentHTML('beforebegin', '<div id="pvMkt" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700"></div>');
+    // Vista Pokémon
+    $('regionBar').insertAdjacentHTML('beforeend', '<button data-r="pokemon" onclick="pvRegion(\'pokemon\')">🔎 Per Pokémon</button>'); paintBar();
+    const pv = document.createElement('div'); pv.id = 'pokemonView'; pv.className = 'hidden space-y-5';
+    pv.innerHTML = `<div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <div><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Vista per Pokémon</h2><p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Cerca un Pokémon e vedi tutte le sue carte in tutti i set: colorate quelle che hai, grigie quelle che ti mancano.</p></div>
+      <form onsubmit="pvPokeSearch(event)" class="flex flex-col sm:flex-row gap-2"><select id="pkSource" class="${inp}"><option value="west">Occidentali</option><option value="jp">Giapponesi (nome in giapponese)</option></select>
+      <input id="pkQuery" placeholder="es. Pikachu, Charizard" class="${inp} flex-1"><button class="px-4 py-2 rounded-xl text-sm font-bold bg-pokeBlue hover:bg-blue-700 text-white transition">Cerca</button></form>
+      <p id="pkSummary" class="text-xs text-slate-600 dark:text-slate-300"></p></div>
+      <div id="pkGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5"></div>`;
+    $('viewSets').appendChild(pv);
+    // Mancanti
+    const bm = document.createElement('button'); bm.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition';
+    bm.textContent = '📋 Mancanti'; bm.onclick = pvMissing; $('setFilterAllBtn').parentElement.appendChild(bm);
+    const mm = document.createElement('div'); mm.id = 'pvMissModal'; mm.className = 'fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4';
+    mm.innerHTML = `<div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden"><div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60"><h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Lista dei mancanti</h2><button onclick="pvMissClose()" class="text-slate-400 hover:text-slate-600 text-lg leading-none">✕</button></div>
+      <div class="p-6 space-y-3"><textarea id="pvMissTxt" readonly class="${inp} w-full h-64 font-mono text-xs"></textarea><div class="flex flex-wrap gap-2 justify-end"><button onclick="pvMissCopy()" class="${btn}">Copia</button><button onclick="pvMissTxtDl()" class="${btn}">Scarica TXT</button><button onclick="pvMissPrint()" class="${btn}">Stampa</button></div></div></div>`;
+    document.body.appendChild(mm);
+    // Pannello statistiche e strumenti (La Mia Collezione) + avviso backup
+    const tp = document.createElement('section'); tp.className = 'bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4';
+    tp.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">📊 Statistiche e strumenti</h3><div class="flex flex-wrap gap-2"><button onclick="pvUpdateAll()" class="${btn}">↻ Aggiorna prezzi</button><button onclick="pvCsv()" class="${btn}">⬇ CSV</button><button onclick="exportCollection()" class="${btn}">💾 Backup JSON</button></div></div><div id="pvStats"></div><div id="pvSnaps"></div>`;
+    $('viewCollection').firstElementChild.after(tp);
+    document.querySelector('main').insertAdjacentHTML('afterbegin', '<div id="pvBanner" class="hidden flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 px-4 py-3 text-sm text-amber-900 dark:text-amber-200"><span></span><button onclick="exportCollection()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-white">Scarica backup ora</button></div>');
+    paintBanner(); renderStats();
+  }
+
   // ---------- Inizializzazione UI ----------
   function init() {
     try { customSets = JSON.parse(localStorage.getItem(CUSTOM_KEY)) || []; } catch { customSets = []; }
@@ -458,7 +660,7 @@
       </div></div>`;
     document.body.appendChild(m);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') pvCloseAdd(); });
-    paintBar(); initEdit();
+    paintBar(); initEdit(); initFeatures();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
