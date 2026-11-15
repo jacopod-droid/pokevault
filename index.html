@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PokéVault TCG — Tracker Collezione</title>
+  <title>PokéVault — Tracker Collezione GCC (Occidentale & Giapponese)</title>
   <style>
     :root {
-      --bg: #0b1120;
+      --bg: #0f172a;
       --surface: #1e293b;
       --surface-hover: #273549;
       --border: #334155;
@@ -33,7 +33,7 @@
     header {
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       border-bottom: 1px solid var(--border);
-      padding: 1rem 1.5rem;
+      padding: 1.25rem 1.5rem;
       position: sticky;
       top: 0;
       z-index: 40;
@@ -74,38 +74,41 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
-    .brand h1 { font-size: 1.2rem; font-weight: 800; }
-    .brand span { font-size: 0.78rem; color: var(--text-muted); display: block; }
+    .brand h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand span { font-size: 0.8rem; color: var(--text-muted); display: block; }
 
-    /* Region Switcher Bar in Header */
-    .region-container {
+    /* Region Switcher */
+    .region-tabs {
       display: flex;
       background: var(--bg);
-      padding: 0.3rem;
+      padding: 0.25rem;
       border-radius: 999px;
       border: 1px solid var(--border);
     }
-    .region-tab-btn {
+    .region-btn {
       border: none;
       background: transparent;
       color: var(--text-muted);
-      padding: 0.45rem 1rem;
+      padding: 0.5rem 1.1rem;
       border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.85rem;
+      font-weight: 600;
+      font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
-    .region-tab-btn.active {
+    .region-btn.active {
       background: var(--primary);
       color: #fff;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
     }
 
+    /* Backup Actions */
     .header-actions {
       display: flex;
       gap: 0.5rem;
-      align-items: center;
     }
     .btn {
       background: var(--surface);
@@ -123,15 +126,16 @@
     }
     .btn:hover { background: var(--surface-hover); border-color: #475569; }
     .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
     .btn-success { background: var(--success); border-color: var(--success); color: #052e16; }
 
-    /* Container & Stats */
+    /* Stats Bar */
     .container { max-width: 1280px; margin: 0 auto; padding: 1.5rem; }
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
     }
     .stat-card {
       background: var(--surface);
@@ -139,11 +143,11 @@
       border-radius: var(--radius);
       padding: 1rem 1.25rem;
     }
-    .stat-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-    .stat-value { font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem; }
-    .stat-sub { font-size: 0.78rem; color: var(--success); margin-top: 0.15rem; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-value { font-size: 1.6rem; font-weight: 800; margin-top: 0.2rem; color: var(--text); }
+    .stat-sub { font-size: 0.8rem; color: var(--success); margin-top: 0.15rem; }
 
-    /* Toolbar */
+    /* Search & Filter Bar */
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -151,37 +155,38 @@
       margin-bottom: 1.5rem;
       align-items: center;
       justify-content: space-between;
-      background: var(--surface);
-      padding: 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
     }
     .search-input {
       flex: 1;
-      min-width: 220px;
-      background: var(--bg);
+      min-width: 240px;
+      background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 0.6rem 0.9rem;
+      padding: 0.65rem 1rem;
       border-radius: 8px;
-      font-size: 0.92rem;
+      font-size: 0.95rem;
     }
     .search-input:focus { outline: none; border-color: var(--primary); }
 
     /* Series Blocks */
-    .series-block { margin-bottom: 2rem; }
+    .series-block {
+      margin-bottom: 2.25rem;
+    }
     .series-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 2px solid var(--border);
-      padding-bottom: 0.5rem;
+      padding-bottom: 0.6rem;
       margin-bottom: 1rem;
     }
     .series-title {
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 800;
       color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .series-badge {
       font-size: 0.75rem;
@@ -229,7 +234,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      padding: 4px;
+      padding: 5px;
     }
     .set-symbol-wrap img {
       max-width: 100%;
@@ -242,19 +247,27 @@
       color: var(--accent);
       text-align: center;
     }
-    .set-info h3 { font-size: 0.95rem; font-weight: 700; line-height: 1.25; }
-    .set-info span { font-size: 0.76rem; color: var(--text-muted); }
-
-    .progress-wrap { width: 100%; }
+    .set-info h3 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .set-info span {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .progress-wrap {
+      width: 100%;
+    }
     .progress-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.3rem;
     }
     .progress-bar {
-      height: 6px;
+      height: 7px;
       background: var(--bg);
       border-radius: 999px;
       overflow: hidden;
@@ -266,7 +279,7 @@
       transition: width 0.3s ease;
     }
 
-    /* Set Detail View (Pokellector Grid) */
+    /* Set Detail View (Pokellector Card Grid) */
     #set-detail-view { display: none; }
     .back-bar {
       display: flex;
@@ -280,19 +293,31 @@
       border-radius: var(--radius);
       margin-bottom: 1.5rem;
     }
-    .set-detail-header { display: flex; align-items: center; gap: 1rem; }
-    .filter-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .set-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .filter-pills {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
     .pill {
       background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text-muted);
       padding: 0.4rem 0.85rem;
       border-radius: 999px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
     }
-    .pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .pill.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
 
     .cards-grid {
       display: grid;
@@ -305,16 +330,18 @@
       border-radius: var(--radius);
       padding: 0.6rem;
       position: relative;
+      transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
     }
     .poke-card.owned {
       border-color: var(--success);
-      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.15);
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
     }
-    .poke-card:hover { transform: translateY(-3px); }
+    .poke-card:hover {
+      transform: translateY(-3px);
+    }
     .card-img-box {
       position: relative;
       border-radius: 8px;
@@ -327,8 +354,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: filter 0.3s ease, opacity 0.3s ease;
-      /* Carte mancanti desaturate in scala di grigi come richiesto */
+      transition: filter 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
       filter: grayscale(100%) contrast(85%) brightness(0.75);
       opacity: 0.72;
     }
@@ -336,346 +362,59 @@
       filter: none;
       opacity: 1;
     }
+    .card-img-box:hover img {
+      transform: scale(1.03);
+    }
+
     .flag-btn {
       position: absolute;
       top: 8px;
       right: 8px;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 2px solid #fff;
       background: rgba(15, 23, 42, 0.8);
       color: #fff;
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 5;
+      transition: all 0.15s;
     }
     .poke-card.owned .flag-btn {
       background: var(--success);
+      border-color: #fff;
       color: #052e16;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
 
-    .card-meta { margin-top: 0.6rem; cursor: pointer; }
-    .card-title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.3rem; }
-    .card-num { font-size: 0.73rem; font-weight: 700; color: var(--accent); }
-    .card-name { font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
-    .tag { font-size: 0.68rem; padding: 0.12rem 0.4rem; border-radius: 6px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
-    .tag.owned-tag { border-color: rgba(34, 197, 94, 0.4); color: #86efac; }
-
-    /* Loader & Modal */
-    .loader-box { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 4px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 1rem;
+    .card-meta {
+      margin-top: 0.6rem;
+      cursor: pointer;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .modal-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(2, 6, 23, 0.8);
-      backdrop-filter: blur(4px);
-      display: none; align-items: center; justify-content: center;
-      z-index: 100; padding: 1rem;
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.3rem;
     }
-    .modal-backdrop.open { display: flex; }
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      max-width: 520px; width: 100%;
+    .card-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .card-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      white-space: nowrap;
       overflow: hidden;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      text-overflow: ellipsis;
     }
-    .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .modal-body { padding: 1.25rem; display: grid; grid-template-columns: 140px 1fr; gap: 1.25rem; }
-    @media (max-width: 500px) { .modal-body { grid-template-columns: 1fr; } }
-    .modal-card-preview img { width: 100%; border-radius: 10px; border: 1px solid var(--border); }
-    .form-group { margin-bottom: 0.85rem; }
-    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem; }
-    .form-control { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.7rem; border-radius: 8px; font-size: 0.9rem; }
-    .checkbox-row { display: flex; align-items: center; gap: 0.6rem; background: var(--bg); padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; margin-bottom: 1rem; }
-    .checkbox-row input { width: 18px; height: 18px; accent-color: var(--success); }
-    .modal-footer { padding: 0.85rem 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.6rem; }
-  </style>
-</head>
-<body>
-
-<header>
-  <div class="header-inner">
-    <div class="brand">
-      <div class="pokeball-icon"></div>
-      <div>
-        <h1>PokéVault TCG</h1>
-        <span>Tracker Collezione stile Pokellector</span>
-      </div>
-    </div>
-
-    <!-- SELETTORE OCCIDENTALE / GIAPPONESE IN EVIDENZA NELL'HEADER -->
-    <div class="region-container">
-      <button class="region-tab-btn active" id="btn-western" onclick="switchRegion('western')">🌍 Occidentali</button>
-      <button class="region-tab-btn" id="btn-japanese" onclick="switchRegion('japanese')">🇯🇵 Giapponesi</button>
-    </div>
-
-    <div class="header-actions">
-      <button class="btn" onclick="exportData()">⬇️ Esporta</button>
-      <button class="btn" onclick="document.getElementById('import-file').click()">⬆️ Importa</button>
-      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
-    </div>
-  </div>
-</header>
-
-<div class="container">
-  <!-- Stats Bar -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Carte (<span id="stat-region-name">Occidentali</span>)</div>
-      <div class="stat-value" id="stat-owned-region">0</div>
-      <div class="stat-sub" id="stat-total-global">Globale: 0 carte</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Valore Stimato</div>
-      <div class="stat-value" id="stat-value-region">€ 0,00</div>
-      <div class="stat-sub" id="stat-value-global">Globale: € 0,00</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Set Iniziati</div>
-      <div class="stat-value" id="stat-sets-started">0</div>
-      <div class="stat-sub" id="stat-sets-total">su 0 set</div>
-    </div>
-  </div>
-
-  <!-- OVERVIEW LIST -->
-  <div id="series-overview">
-    <div class="toolbar">
-      <input type="text" id="search-set-input" class="search-input" placeholder="🔍 Cerca espansione (es. Base Set, 151, Mega Evolution)..." oninput="renderSeries()" />
-    </div>
-    <div id="series-container"></div>
-  </div>
-
-  <!-- SET DETAIL VIEW -->
-  <div id="set-detail-view">
-    <div class="back-bar">
-      <div class="set-detail-header">
-        <button class="btn" onclick="closeSetView()">← Tutti i Set</button>
-        <div class="set-symbol-wrap" id="detail-set-symbol"></div>
-        <div>
-          <h2 id="detail-set-title" style="font-size:1.1rem;">Nome Set</h2>
-          <span id="detail-set-subtitle" style="font-size:0.78rem; color:var(--text-muted);">Blocco • 0 / 0</span>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
-        <input type="text" id="search-card-input" class="search-input" style="min-width:170px; padding:0.4rem 0.7rem;" placeholder="Filtra carta..." oninput="renderSetCards()" />
-        <div class="filter-pills">
-          <button class="pill active" data-filter="all" onclick="setCardFilter('all', this)">Tutte</button>
-          <button class="pill" data-filter="owned" onclick="setCardFilter('owned', this)">Possedute</button>
-          <button class="pill" data-filter="missing" onclick="setCardFilter('missing', this)">Mancanti</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="cards-loading" class="loader-box" style="display:none;">
-      <div class="spinner"></div>
-      <p>Caricamento carte del set in corso...</p>
-    </div>
-
-    <div id="cards-grid" class="cards-grid"></div>
-  </div>
-</div>
-
-<!-- MODAL EDIT CARTA -->
-<div class="modal-backdrop" id="card-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="modal-title" style="font-size:1rem;">Dettagli Carta</h3>
-      <button class="btn" onclick="closeModal()" style="padding:0.2rem 0.5rem;">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-card-preview">
-        <img id="modal-img" src="" alt="Carta" />
-        <p id="modal-card-sub" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:0.4rem;"></p>
-      </div>
-      <div>
-        <label class="checkbox-row">
-          <input type="checkbox" id="modal-owned" />
-          <strong>In Collezione (Flaggata)</strong>
-        </label>
-        <div class="form-group">
-          <label>Condizione</label>
-          <select id="modal-condition" class="form-control">
-            <option value="Mint (M)">Mint (M)</option>
-            <option value="Near Mint (NM)" selected>Near Mint (NM)</option>
-            <option value="Excellent (EX)">Excellent (EX)</option>
-            <option value="Good (GD)">Good (GD)</option>
-            <option value="Light Played (LP)">Light Played (LP)</option>
-            <option value="Played (PL)">Played (PL)</option>
-            <option value="Graded (PSA/BGS)">Graded (PSA / BGS / CGC)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Prezzo (€)</label>
-          <input type="number" step="0.01" min="0" id="modal-price" class="form-control" placeholder="0.00" />
-        </div>
-        <div class="form-group">
-          <label>Data di acquisto</label>
-          <input type="date" id="modal-date" class="form-control" />
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-success" onclick="saveCardModal()">Salva</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  // CATALOGO COMPLETO FINO A MEGA EVOLUTION (OCCIDENTALE E GIAPPONESE)
-  const CATALOG = {
-    western: [
-      {
-        series: "Mega Evolution Series",
-        sets: [
-          { id: "me02", code: "ME2", name: "Phantasmal Flames", total: 190, tcgApiId: "me2", tcgdexId: "me02" },
-          { id: "me01", code: "ME1", name: "Mega Evolution", total: 180, tcgApiId: "me1", tcgdexId: "me01" },
-          { id: "mep", code: "MEP", name: "Mega Evolution Promos", total: 50, tcgApiId: "mep", tcgdexId: "mep" }
-        ]
-      },
-      {
-        series: "Scarlet & Violet Series",
-        sets: [
-          { id: "sv10", code: "DRI", name: "Destined Rivals", total: 244, tcgApiId: "sv10", tcgdexId: "sv10" },
-          { id: "sv9", code: "JTG", name: "Journey Together", total: 190, tcgApiId: "sv9", tcgdexId: "sv09" },
-          { id: "sv8pt5", code: "PRE", name: "Prismatic Evolutions", total: 180, tcgApiId: "sv8pt5", tcgdexId: "sv08.5" },
-          { id: "sv8", code: "SSP", name: "Surging Sparks", total: 252, tcgApiId: "sv8", tcgdexId: "sv08" },
-          { id: "sv7", code: "SCR", name: "Stellar Crown", total: 175, tcgApiId: "sv7", tcgdexId: "sv07" },
-          { id: "sv6pt5", code: "SFA", name: "Shrouded Fable", total: 99, tcgApiId: "sv6pt5", tcgdexId: "sv06.5" },
-          { id: "sv6", code: "TWM", name: "Twilight Masquerade", total: 226, tcgApiId: "sv6", tcgdexId: "sv06" },
-          { id: "sv5", code: "TEF", name: "Temporal Forces", total: 218, tcgApiId: "sv5", tcgdexId: "sv05" },
-          { id: "sv4pt5", code: "PAF", name: "Paldean Fates", total: 245, tcgApiId: "sv4pt5", tcgdexId: "sv04.5" },
-          { id: "sv4", code: "PAR", name: "Paradox Rift", total: 266, tcgApiId: "sv4", tcgdexId: "sv04" },
-          { id: "sv3pt5", code: "MEW", name: "Scarlet & Violet—151", total: 207, tcgApiId: "sv3pt5", tcgdexId: "sv03.5" },
-          { id: "sv3", code: "OBF", name: "Obsidian Flames", total: 230, tcgApiId: "sv3", tcgdexId: "sv03" },
-          { id: "sv2", code: "PAL", name: "Paldea Evolved", total: 279, tcgApiId: "sv2", tcgdexId: "sv02" },
-          { id: "sv1", code: "SVI", name: "Scarlet & Violet", total: 258, tcgApiId: "sv1", tcgdexId: "sv01" },
-          { id: "svp", code: "SVP", name: "SV Black Star Promos", total: 200, tcgApiId: "svp", tcgdexId: "svp" }
-        ]
-      },
-      {
-        series: "Sword & Shield Series",
-        sets: [
-          { id: "swsh12pt5", code: "CRZ", name: "Crown Zenith", total: 160, tcgApiId: "swsh12pt5", tcgdexId: "swsh12.5" },
-          { id: "swsh12", code: "SIT", name: "Silver Tempest", total: 215, tcgApiId: "swsh12", tcgdexId: "swsh12" },
-          { id: "swsh11", code: "LOR", name: "Lost Origin", total: 217, tcgApiId: "swsh11", tcgdexId: "swsh11" },
-          { id: "pgo", code: "PGO", name: "Pokémon GO", total: 88, tcgApiId: "pgo", tcgdexId: "swsh10.5" },
-          { id: "swsh10", code: "ASR", name: "Astral Radiance", total: 216, tcgApiId: "swsh10", tcgdexId: "swsh10" },
-          { id: "swsh9", code: "BRS", name: "Brilliant Stars", total: 186, tcgApiId: "swsh9", tcgdexId: "swsh9" },
-          { id: "swsh8", code: "FST", name: "Fusion Strike", total: 284, tcgApiId: "swsh8", tcgdexId: "swsh8" },
-          { id: "cel25", code: "CEL", name: "Celebrations", total: 25, tcgApiId: "cel25", tcgdexId: "cel25" },
-          { id: "swsh7", code: "EVS", name: "Evolving Skies", total: 237, tcgApiId: "swsh7", tcgdexId: "swsh7" },
-          { id: "swsh6", code: "CRE", name: "Chilling Reign", total: 233, tcgApiId: "swsh6", tcgdexId: "swsh6" },
-          { id: "swsh5", code: "BST", name: "Battle Styles", total: 183, tcgApiId: "swsh5", tcgdexId: "swsh5" },
-          { id: "swsh4", code: "VIV", name: "Vivid Voltage", total: 203, tcgApiId: "swsh4", tcgdexId: "swsh4" },
-          { id: "swsh3", code: "DAA", name: "Darkness Ablaze", total: 201, tcgApiId: "swsh3", tcgdexId: "swsh3" },
-          { id: "swsh2", code: "RCL", name: "Rebel Clash", total: 209, tcgApiId: "swsh2", tcgdexId: "swsh2" },
-          { id: "swsh1", code: "SSH", name: "Sword & Shield", total: 216, tcgApiId: "swsh1", tcgdexId: "swsh1" }
-        ]
-      },
-      {
-        series: "Sun & Moon Series",
-        sets: [
-          { id: "sm12", code: "CEC", name: "Cosmic Eclipse", total: 271, tcgApiId: "sm12", tcgdexId: "sm12" },
-          { id: "sm115", code: "HIF", name: "Hidden Fates", total: 69, tcgApiId: "sm115", tcgdexId: "sm115" },
-          { id: "sm11", code: "UNM", name: "Unified Minds", total: 258, tcgApiId: "sm11", tcgdexId: "sm11" },
-          { id: "sm10", code: "UNB", name: "Unbroken Bonds", total: 234, tcgApiId: "sm10", tcgdexId: "sm10" },
-          { id: "sm9", code: "TEU", name: "Team Up", total: 196, tcgApiId: "sm9", tcgdexId: "sm9" },
-          { id: "sm8", code: "LOT", name: "Lost Thunder", total: 236, tcgApiId: "sm8", tcgdexId: "sm8" },
-          { id: "sm7", code: "CES", name: "Celestial Storm", total: 183, tcgApiId: "sm7", tcgdexId: "sm7" },
-          { id: "sm6", code: "FLI", name: "Forbidden Light", total: 146, tcgApiId: "sm6", tcgdexId: "sm6" },
-          { id: "sm5", code: "UPR", name: "Ultra Prism", total: 173, tcgApiId: "sm5", tcgdexId: "sm5" },
-          { id: "sm4", code: "CIN", name: "Crimson Invasion", total: 124, tcgApiId: "sm4", tcgdexId: "sm4" },
-          { id: "sm3", code: "BUS", name: "Burning Shadows", total: 169, tcgApiId: "sm3", tcgdexId: "sm3" },
-          { id: "sm2", code: "GRI", name: "Guardians Rising", total: 169, tcgApiId: "sm2", tcgdexId: "sm2" },
-          { id: "sm1", code: "SUM", name: "Sun & Moon", total: 163, tcgApiId: "sm1", tcgdexId: "sm1" }
-        ]
-      },
-      {
-        series: "XY Series",
-        sets: [
-          { id: "xy12", code: "EVO", name: "Evolutions", total: 113, tcgApiId: "xy12", tcgdexId: "xy12" },
-          { id: "xy11", code: "STS", name: "Steam Siege", total: 116, tcgApiId: "xy11", tcgdexId: "xy11" },
-          { id: "xy10", code: "FCO", name: "Fates Collide", total: 129, tcgApiId: "xy10", tcgdexId: "xy10" },
-          { id: "g1", code: "GEN", name: "Generations", total: 115, tcgApiId: "g1", tcgdexId: "g1" },
-          { id: "xy9", code: "BKP", name: "BREAKpoint", total: 126, tcgApiId: "xy9", tcgdexId: "xy9" },
-          { id: "xy8", code: "BKT", name: "BREAKthrough", total: 165, tcgApiId: "xy8", tcgdexId: "xy8" },
-          { id: "xy7", code: "AOR", name: "Ancient Origins", total: 100, tcgApiId: "xy7", tcgdexId: "xy7" },
-          { id: "xy6", code: "ROS", name: "Roaring Skies", total: 112, tcgApiId: "xy6", tcgdexId: "xy6" },
-          { id: "xy5", code: "PRC", name: "Primal Clash", total: 164, tcgApiId: "xy5", tcgdexId: "xy5" },
-          { id: "xy4", code: "PHF", name: "Phantom Forces", total: 124, tcgApiId: "xy4", tcgdexId: "xy4" },
-          { id: "xy3", code: "FFI", name: "Furious Fists", total: 114, tcgApiId: "xy3", tcgdexId: "xy3" },
-          { id: "xy2", code: "FLF", name: "Flashfire", total: 110, tcgApiId: "xy2", tcgdexId: "xy2" },
-          { id: "xy1", code: "XY", name: "XY Base Set", total: 146, tcgApiId: "xy1", tcgdexId: "xy1" }
-        ]
-      },
-      {
-        series: "Black & White Series",
-        sets: [
-          { id: "bw11", code: "LTR", name: "Legendary Treasures", total: 140, tcgApiId: "bw11", tcgdexId: "bw11" },
-          { id: "bw7", code: "BCR", name: "Boundaries Crossed", total: 153, tcgApiId: "bw7", tcgdexId: "bw7" },
-          { id: "bw1", code: "BLW", name: "Black & White", total: 115, tcgApiId: "bw1", tcgdexId: "bw1" }
-        ]
-      },
-      {
-        series: "Wizards & Classic Series",
-        sets: [
-          { id: "base5", code: "TR", name: "Team Rocket", total: 83, tcgApiId: "base5", tcgdexId: "base5" },
-          { id: "base4", code: "B2", name: "Base Set 2", total: 130, tcgApiId: "base4", tcgdexId: "base4" },
-          { id: "base3", code: "FO", name: "Fossil", total: 62, tcgApiId: "base3", tcgdexId: "base3" },
-          { id: "base2", code: "JU", name: "Jungle", total: 64, tcgApiId: "base2", tcgdexId: "base2" },
-          { id: "base1", code: "BS", name: "Base Set", total: 102, tcgApiId: "base1", tcgdexId: "base1" },
-          { id: "basep", code: "PR", name: "Wizards Black Star Promos", total: 53, tcgApiId: "basep", tcgdexId: "basep" }
-        ]
-      }
-    ],
-    japanese: [
-      {
-        series: "Mega Evolution Series (JP • M)",
-        sets: [
-          { id: "jp-m2", code: "M2", name: "Inferno X", total: 106, tcgdexJa: "M2", fallbackEn: "me2" },
-          { id: "jp-m1s", code: "M1S", name: "Mega Symphonia", total: 92, tcgdexJa: "M1S", fallbackEn: "me1" }
-        ]
-      },
-      {
-        series: "Scarlet & Violet Series (JP • SV)",
-        sets: [
-          { id: "jp-sv10", code: "SV10", name: "The Glory of Team Rocket", total: 130, tcgdexJa: "SV10", fallbackEn: "sv10" },
-          { id: "jp-sv9", code: "SV9", name: "Battle Partners", total: 132, tcgdexJa: "SV9", fallbackEn: "sv9" },
-          { id: "jp-sv8a", code: "SV8a", name: "Terastal Fest ex", total: 237, tcgdexJa: "SV8a", fallbackEn: "sv8pt5" },
-          { id: "jp-sv8", code: "SV8", name: "Super Electric Breaker", total: 136, tcgdexJa: "SV8", fallbackEn: "sv8" },
-          { id: "jp-sv7", code: "SV7", name: "Stellar Miracle", total: 135, tcgdexJa: "SV7", fallbackEn: "sv7" },
-          { id: "jp-sv6", code: "SV6", name: "Transformation Mask", total: 133, tcgdexJa: "SV6", fallbackEn: "sv6" },
-          { id: "jp-sv2a", code: "SV2a", name: "Pokémon Card 151", total: 210, tcgdexJa: "SV2a", fallbackEn: "sv3pt5" },
-          { id: "jp-sv1s", code: "SV1S", name: "Scarlet ex", total: 108, tcgdexJa: "SV1S", fallbackEn: "sv1" }
-        ]
-      },
-      {
-        series: "Sword & Shield Series (JP • S)",
-        sets: [
-          { id: "jp-s12a", code: "S12a", name: "VSTAR Universe", total: 262, tcgdexJa: "S12a", fallbackEn: "swsh12pt5" },
-          { id: "jp-s8b", code: "S8b", name: "VMAX Climax", total: 284, tcgdexJa: "S8b", fallbackEn: "swsh9" },
-          { id: "jp-s6a", code: "S6a", name: "Eevee Heroes", total: 101, tcgdexJa: "S6a", fallbackEn: "swsh7" }
-        ]
-      },
-      {
-        series: "Classic & Base Series (JP)",
-        sets: [
-          { id: "jp-cp6", code: "CP6", name: "20th Anniversary", total:
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
