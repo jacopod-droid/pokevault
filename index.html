@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PokéVault — Tracker Collezione GCC (Occidentale & Giapponese)</title>
+  <title>PokéVault TCG — Tracker Collezione</title>
   <style>
     :root {
-      --bg: #0f172a;
+      --bg: #0b1120;
       --surface: #1e293b;
       --surface-hover: #273549;
       --border: #334155;
@@ -33,7 +33,7 @@
     header {
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       border-bottom: 1px solid var(--border);
-      padding: 1.25rem 1.5rem;
+      padding: 1rem 1.5rem;
       position: sticky;
       top: 0;
       z-index: 40;
@@ -74,41 +74,38 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
-    .brand h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
-    .brand span { font-size: 0.8rem; color: var(--text-muted); display: block; }
+    .brand h1 { font-size: 1.2rem; font-weight: 800; }
+    .brand span { font-size: 0.78rem; color: var(--text-muted); display: block; }
 
-    /* Region Switcher */
-    .region-tabs {
+    /* Region Switcher Bar in Header */
+    .region-container {
       display: flex;
       background: var(--bg);
-      padding: 0.25rem;
+      padding: 0.3rem;
       border-radius: 999px;
       border: 1px solid var(--border);
     }
-    .region-btn {
+    .region-tab-btn {
       border: none;
       background: transparent;
       color: var(--text-muted);
-      padding: 0.5rem 1.1rem;
+      padding: 0.45rem 1rem;
       border-radius: 999px;
-      font-weight: 600;
-      font-size: 0.9rem;
+      font-weight: 700;
+      font-size: 0.85rem;
       cursor: pointer;
       transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
     }
-    .region-btn.active {
+    .region-tab-btn.active {
       background: var(--primary);
       color: #fff;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
     }
 
-    /* Backup Actions */
     .header-actions {
       display: flex;
       gap: 0.5rem;
+      align-items: center;
     }
     .btn {
       background: var(--surface);
@@ -126,16 +123,15 @@
     }
     .btn:hover { background: var(--surface-hover); border-color: #475569; }
     .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-hover); }
     .btn-success { background: var(--success); border-color: var(--success); color: #052e16; }
 
-    /* Stats Bar */
+    /* Container & Stats */
     .container { max-width: 1280px; margin: 0 auto; padding: 1.5rem; }
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
-      margin-bottom: 1.75rem;
+      margin-bottom: 1.5rem;
     }
     .stat-card {
       background: var(--surface);
@@ -143,11 +139,11 @@
       border-radius: var(--radius);
       padding: 1rem 1.25rem;
     }
-    .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-    .stat-value { font-size: 1.6rem; font-weight: 800; margin-top: 0.2rem; color: var(--text); }
-    .stat-sub { font-size: 0.8rem; color: var(--success); margin-top: 0.15rem; }
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem; }
+    .stat-sub { font-size: 0.78rem; color: var(--success); margin-top: 0.15rem; }
 
-    /* Search & Filter Bar */
+    /* Toolbar */
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -155,38 +151,37 @@
       margin-bottom: 1.5rem;
       align-items: center;
       justify-content: space-between;
+      background: var(--surface);
+      padding: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
     }
     .search-input {
       flex: 1;
-      min-width: 240px;
-      background: var(--surface);
+      min-width: 220px;
+      background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 0.65rem 1rem;
+      padding: 0.6rem 0.9rem;
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
     }
     .search-input:focus { outline: none; border-color: var(--primary); }
 
     /* Series Blocks */
-    .series-block {
-      margin-bottom: 2.25rem;
-    }
+    .series-block { margin-bottom: 2rem; }
     .series-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 2px solid var(--border);
-      padding-bottom: 0.6rem;
+      padding-bottom: 0.5rem;
       margin-bottom: 1rem;
     }
     .series-title {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 800;
       color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
     .series-badge {
       font-size: 0.75rem;
@@ -234,7 +229,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      padding: 5px;
+      padding: 4px;
     }
     .set-symbol-wrap img {
       max-width: 100%;
@@ -247,27 +242,19 @@
       color: var(--accent);
       text-align: center;
     }
-    .set-info h3 {
-      font-size: 0.98rem;
-      font-weight: 700;
-      line-height: 1.25;
-    }
-    .set-info span {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-    .progress-wrap {
-      width: 100%;
-    }
+    .set-info h3 { font-size: 0.95rem; font-weight: 700; line-height: 1.25; }
+    .set-info span { font-size: 0.76rem; color: var(--text-muted); }
+
+    .progress-wrap { width: 100%; }
     .progress-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-muted);
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.25rem;
     }
     .progress-bar {
-      height: 7px;
+      height: 6px;
       background: var(--bg);
       border-radius: 999px;
       overflow: hidden;
@@ -279,7 +266,7 @@
       transition: width 0.3s ease;
     }
 
-    /* Set Detail View (Pokellector Card Grid) */
+    /* Set Detail View (Pokellector Grid) */
     #set-detail-view { display: none; }
     .back-bar {
       display: flex;
@@ -293,31 +280,19 @@
       border-radius: var(--radius);
       margin-bottom: 1.5rem;
     }
-    .set-detail-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .filter-pills {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
+    .set-detail-header { display: flex; align-items: center; gap: 1rem; }
+    .filter-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
     .pill {
       background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text-muted);
       padding: 0.4rem 0.85rem;
       border-radius: 999px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
     }
-    .pill.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-    }
+    .pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
     .cards-grid {
       display: grid;
@@ -330,18 +305,16 @@
       border-radius: var(--radius);
       padding: 0.6rem;
       position: relative;
-      transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
     }
     .poke-card.owned {
       border-color: var(--success);
-      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.15);
     }
-    .poke-card:hover {
-      transform: translateY(-3px);
-    }
+    .poke-card:hover { transform: translateY(-3px); }
     .card-img-box {
       position: relative;
       border-radius: 8px;
@@ -354,8 +327,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: filter 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
-      /* Unowned cards are grayscale & desaturated as requested */
+      transition: filter 0.3s ease, opacity 0.3s ease;
+      /* Carte mancanti desaturate in scala di grigi come richiesto */
       filter: grayscale(100%) contrast(85%) brightness(0.75);
       opacity: 0.72;
     }
@@ -363,87 +336,41 @@
       filter: none;
       opacity: 1;
     }
-    .card-img-box:hover img {
-      transform: scale(1.03);
-    }
-
-    /* Quick Flag Checkbox Button */
     .flag-btn {
       position: absolute;
       top: 8px;
       right: 8px;
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       border: 2px solid #fff;
       background: rgba(15, 23, 42, 0.8);
       color: #fff;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 5;
-      transition: all 0.15s;
     }
     .poke-card.owned .flag-btn {
       background: var(--success);
-      border-color: #fff;
       color: #052e16;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
 
-    .card-meta {
-      margin-top: 0.6rem;
-      cursor: pointer;
-    }
-    .card-title-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 0.3rem;
-    }
-    .card-num {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
-    .card-name {
-      font-size: 0.88rem;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-top: 0.4rem;
-    }
-    .tag {
-      font-size: 0.7rem;
-      padding: 0.15rem 0.45rem;
-      border-radius: 6px;
-      background: var(--bg);
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-    }
-    .tag.owned-tag {
-      border-color: rgba(34, 197, 94, 0.4);
-      color: #86efac;
-    }
+    .card-meta { margin-top: 0.6rem; cursor: pointer; }
+    .card-title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.3rem; }
+    .card-num { font-size: 0.73rem; font-weight: 700; color: var(--accent); }
+    .card-name { font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
+    .tag { font-size: 0.68rem; padding: 0.12rem 0.4rem; border-radius: 6px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+    .tag.owned-tag { border-color: rgba(34, 197, 94, 0.4); color: #86efac; }
 
-    /* Loading & Manual Add */
-    .loader-box {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--text-muted);
-    }
+    /* Loader & Modal */
+    .loader-box { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
     .spinner {
-      width: 38px;
-      height: 38px;
+      width: 36px; height: 36px;
       border: 4px solid var(--border);
       border-top-color: var(--primary);
       border-radius: 50%;
@@ -452,86 +379,32 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Modal */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(2, 6, 23, 0.8);
       backdrop-filter: blur(4px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 1rem;
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; padding: 1rem;
     }
     .modal-backdrop.open { display: flex; }
     .modal {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
-      max-width: 540px;
-      width: 100%;
+      max-width: 520px; width: 100%;
       overflow: hidden;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     }
-    .modal-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-body {
-      padding: 1.25rem;
-      display: grid;
-      grid-template-columns: 150px 1fr;
-      gap: 1.25rem;
-    }
-    @media (max-width: 520px) {
-      .modal-body { grid-template-columns: 1fr; }
-      .modal-card-preview { max-width: 160px; margin: 0 auto; }
-    }
-    .modal-card-preview img {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-    }
-    .form-group { margin-bottom: 0.9rem; }
-    .form-group label {
-      display: block;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 0.3rem;
-    }
-    .form-control {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.55rem 0.75rem;
-      border-radius: 8px;
-      font-size: 0.92rem;
-    }
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: var(--bg);
-      padding: 0.65rem 0.85rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      margin-bottom: 1rem;
-    }
+    .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 1.25rem; display: grid; grid-template-columns: 140px 1fr; gap: 1.25rem; }
+    @media (max-width: 500px) { .modal-body { grid-template-columns: 1fr; } }
+    .modal-card-preview img { width: 100%; border-radius: 10px; border: 1px solid var(--border); }
+    .form-group { margin-bottom: 0.85rem; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .form-control { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.7rem; border-radius: 8px; font-size: 0.9rem; }
+    .checkbox-row { display: flex; align-items: center; gap: 0.6rem; background: var(--bg); padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; margin-bottom: 1rem; }
     .checkbox-row input { width: 18px; height: 18px; accent-color: var(--success); }
-    .modal-footer {
-      padding: 0.9rem 1.25rem;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.6rem;
-    }
+    .modal-footer { padding: 0.85rem 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.6rem; }
   </style>
 </head>
 <body>
@@ -546,103 +419,98 @@
       </div>
     </div>
 
-    <div class="region-tabs">
-      <button class="region-btn active" id="tab-western" onclick="switchRegion('western')">
-        🌍 Carte Occidentali (EN/IT)
-      </button>
-      <button class="region-btn" id="tab-japanese" onclick="switchRegion('japanese')">
-        🇯🇵 Carte Giapponesi (JP)
-      </button>
+    <!-- SELETTORE OCCIDENTALE / GIAPPONESE IN EVIDENZA NELL'HEADER -->
+    <div class="region-container">
+      <button class="region-tab-btn active" id="btn-western" onclick="switchRegion('western')">🌍 Occidentali</button>
+      <button class="region-tab-btn" id="btn-japanese" onclick="switchRegion('japanese')">🇯🇵 Giapponesi</button>
     </div>
 
     <div class="header-actions">
-      <button class="btn" onclick="exportData()" title="Scarica backup JSON">⬇️ Esporta JSON</button>
-      <button class="btn" onclick="document.getElementById('import-file').click()" title="Ripristina backup JSON">⬆️ Importa</button>
+      <button class="btn" onclick="exportData()">⬇️ Esporta</button>
+      <button class="btn" onclick="document.getElementById('import-file').click()">⬆️ Importa</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
     </div>
   </div>
 </header>
 
 <div class="container">
-  <!-- Global Stats -->
+  <!-- Stats Bar -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-label">Carte Possedute (<span id="stat-region-label">Occidentali</span>)</div>
+      <div class="stat-label">Carte (<span id="stat-region-name">Occidentali</span>)</div>
       <div class="stat-value" id="stat-owned-region">0</div>
-      <div class="stat-sub" id="stat-total-all">Totale globale: 0 carte</div>
+      <div class="stat-sub" id="stat-total-global">Globale: 0 carte</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Valore Stimato Collezione</div>
+      <div class="stat-label">Valore Stimato</div>
       <div class="stat-value" id="stat-value-region">€ 0,00</div>
-      <div class="stat-sub" id="stat-value-all">Globale: € 0,00</div>
+      <div class="stat-sub" id="stat-value-global">Globale: € 0,00</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Set Iniziati</div>
       <div class="stat-value" id="stat-sets-started">0</div>
-      <div class="stat-sub" id="stat-sets-total">su 0 espansioni catalogate</div>
+      <div class="stat-sub" id="stat-sets-total">su 0 set</div>
     </div>
   </div>
 
-  <!-- SERIES & SETS OVERVIEW -->
+  <!-- OVERVIEW LIST -->
   <div id="series-overview">
     <div class="toolbar">
-      <input type="text" id="search-set-input" class="search-input" placeholder="🔍 Cerca espansione o blocco (es. Base Set, 151, Mega Evolution, Terastal...)" oninput="renderSeries()" />
+      <input type="text" id="search-set-input" class="search-input" placeholder="🔍 Cerca espansione (es. Base Set, 151, Mega Evolution)..." oninput="renderSeries()" />
     </div>
     <div id="series-container"></div>
   </div>
 
-  <!-- SINGLE SET DETAIL VIEW -->
+  <!-- SET DETAIL VIEW -->
   <div id="set-detail-view">
     <div class="back-bar">
       <div class="set-detail-header">
-        <button class="btn" onclick="closeSetView()">← Tutti i Blocchi</button>
+        <button class="btn" onclick="closeSetView()">← Tutti i Set</button>
         <div class="set-symbol-wrap" id="detail-set-symbol"></div>
         <div>
-          <h2 id="detail-set-title" style="font-size:1.15rem;">Nome Set</h2>
-          <span id="detail-set-subtitle" style="font-size:0.82rem; color:var(--text-muted);">Blocco • 0 / 0 possedute</span>
+          <h2 id="detail-set-title" style="font-size:1.1rem;">Nome Set</h2>
+          <span id="detail-set-subtitle" style="font-size:0.78rem; color:var(--text-muted);">Blocco • 0 / 0</span>
         </div>
       </div>
 
-      <div style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center;">
-        <input type="text" id="search-card-input" class="search-input" style="min-width:190px; padding:0.45rem 0.8rem;" placeholder="Filtra carta..." oninput="renderSetCards()" />
+      <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+        <input type="text" id="search-card-input" class="search-input" style="min-width:170px; padding:0.4rem 0.7rem;" placeholder="Filtra carta..." oninput="renderSetCards()" />
         <div class="filter-pills">
           <button class="pill active" data-filter="all" onclick="setCardFilter('all', this)">Tutte</button>
           <button class="pill" data-filter="owned" onclick="setCardFilter('owned', this)">Possedute</button>
           <button class="pill" data-filter="missing" onclick="setCardFilter('missing', this)">Mancanti</button>
         </div>
-        <button class="btn btn-primary" onclick="openManualCardModal()">+ Carta Manuale</button>
       </div>
     </div>
 
     <div id="cards-loading" class="loader-box" style="display:none;">
       <div class="spinner"></div>
-      <p>Caricamento immagini ufficiali del set in corso...</p>
+      <p>Caricamento carte del set in corso...</p>
     </div>
 
     <div id="cards-grid" class="cards-grid"></div>
   </div>
 </div>
 
-<!-- EDIT CARD MODAL -->
+<!-- MODAL EDIT CARTA -->
 <div class="modal-backdrop" id="card-modal">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="modal-title" style="font-size:1.05rem;">Dettagli Carta</h3>
-      <button class="btn" onclick="closeModal()" style="padding:0.25rem 0.6rem;">✕</button>
+      <h3 id="modal-title" style="font-size:1rem;">Dettagli Carta</h3>
+      <button class="btn" onclick="closeModal()" style="padding:0.2rem 0.5rem;">✕</button>
     </div>
     <div class="modal-body">
       <div class="modal-card-preview">
-        <img id="modal-img" src="" alt="Carta Pokémon" />
-        <p id="modal-card-sub" style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.5rem;"></p>
+        <img id="modal-img" src="" alt="Carta" />
+        <p id="modal-card-sub" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:0.4rem;"></p>
       </div>
       <div>
         <label class="checkbox-row">
           <input type="checkbox" id="modal-owned" />
           <strong>In Collezione (Flaggata)</strong>
         </label>
-
         <div class="form-group">
-          <label for="modal-condition">Condizione</label>
+          <label>Condizione</label>
           <select id="modal-condition" class="form-control">
             <option value="Mint (M)">Mint (M)</option>
             <option value="Near Mint (NM)" selected>Near Mint (NM)</option>
@@ -650,69 +518,36 @@
             <option value="Good (GD)">Good (GD)</option>
             <option value="Light Played (LP)">Light Played (LP)</option>
             <option value="Played (PL)">Played (PL)</option>
-            <option value="Poor (PO)">Poor (PO)</option>
-            <option value="Graded (PSA/BGS/CGC)">Graded (PSA / BGS / CGC)</option>
+            <option value="Graded (PSA/BGS)">Graded (PSA / BGS / CGC)</option>
           </select>
         </div>
-
         <div class="form-group">
-          <label for="modal-price">Prezzo (€)</label>
+          <label>Prezzo (€)</label>
           <input type="number" step="0.01" min="0" id="modal-price" class="form-control" placeholder="0.00" />
         </div>
-
         <div class="form-group">
-          <label for="modal-date">Data di acquisto</label>
+          <label>Data di acquisto</label>
           <input type="date" id="modal-date" class="form-control" />
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-success" onclick="saveCardModal()">Salva Modifiche</button>
-    </div>
-  </div>
-</div>
-
-<!-- MANUAL CARD MODAL (for brand-new/unindexed sets) -->
-<div class="modal-backdrop" id="manual-modal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
-      <h3 style="font-size:1.05rem;">Aggiungi Carta al Set</h3>
-      <button class="btn" onclick="closeManualModal()" style="padding:0.25rem 0.6rem;">✕</button>
-    </div>
-    <div style="padding:1.25rem;">
-      <div class="form-group">
-        <label>Numero Carta (es. 001/165)</label>
-        <input type="text" id="man-num" class="form-control" placeholder="001" />
-      </div>
-      <div class="form-group">
-        <label>Nome Pokémon / Carta</label>
-        <input type="text" id="man-name" class="form-control" placeholder="es. Mega Charizard ex" />
-      </div>
-      <div class="form-group">
-        <label>URL Immagine (opzionale)</label>
-        <input type="url" id="man-img" class="form-control" placeholder="https://..." />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeManualModal()">Annulla</button>
-      <button class="btn btn-primary" onclick="saveManualCard()">Aggiungi</button>
+      <button class="btn btn-success" onclick="saveCardModal()">Salva</button>
     </div>
   </div>
 </div>
 
 <script>
-  // =========================================================================
-  // 1. CATALOGO COMPLETO BLOCCHI DI ESPANSIONE (OCCIDENTALI & GIAPPONESI)
-  // =========================================================================
+  // CATALOGO COMPLETO FINO A MEGA EVOLUTION (OCCIDENTALE E GIAPPONESE)
   const CATALOG = {
     western: [
       {
-        series: "Mega Evolution Series (2025–2026)",
+        series: "Mega Evolution Series",
         sets: [
           { id: "me02", code: "ME2", name: "Phantasmal Flames", total: 190, tcgApiId: "me2", tcgdexId: "me02" },
           { id: "me01", code: "ME1", name: "Mega Evolution", total: 180, tcgApiId: "me1", tcgdexId: "me01" },
-          { id: "mep", code: "MEP", name: "Mega Evolution Black Star Promos", total: 50, tcgApiId: "mep", tcgdexId: "mep" }
+          { id: "mep", code: "MEP", name: "Mega Evolution Promos", total: 50, tcgApiId: "mep", tcgdexId: "mep" }
         ]
       },
       {
@@ -749,9 +584,7 @@
           { id: "swsh7", code: "EVS", name: "Evolving Skies", total: 237, tcgApiId: "swsh7", tcgdexId: "swsh7" },
           { id: "swsh6", code: "CRE", name: "Chilling Reign", total: 233, tcgApiId: "swsh6", tcgdexId: "swsh6" },
           { id: "swsh5", code: "BST", name: "Battle Styles", total: 183, tcgApiId: "swsh5", tcgdexId: "swsh5" },
-          { id: "swsh45", code: "SHF", name: "Shining Fates", total: 73, tcgApiId: "swsh45", tcgdexId: "swsh4.5" },
           { id: "swsh4", code: "VIV", name: "Vivid Voltage", total: 203, tcgApiId: "swsh4", tcgdexId: "swsh4" },
-          { id: "swsh35", code: "CPA", name: "Champion's Path", total: 80, tcgApiId: "swsh35", tcgdexId: "swsh3.5" },
           { id: "swsh3", code: "DAA", name: "Darkness Ablaze", total: 201, tcgApiId: "swsh3", tcgdexId: "swsh3" },
           { id: "swsh2", code: "RCL", name: "Rebel Clash", total: 209, tcgApiId: "swsh2", tcgdexId: "swsh2" },
           { id: "swsh1", code: "SSH", name: "Sword & Shield", total: 216, tcgApiId: "swsh1", tcgdexId: "swsh1" }
@@ -764,15 +597,12 @@
           { id: "sm115", code: "HIF", name: "Hidden Fates", total: 69, tcgApiId: "sm115", tcgdexId: "sm115" },
           { id: "sm11", code: "UNM", name: "Unified Minds", total: 258, tcgApiId: "sm11", tcgdexId: "sm11" },
           { id: "sm10", code: "UNB", name: "Unbroken Bonds", total: 234, tcgApiId: "sm10", tcgdexId: "sm10" },
-          { id: "det1", code: "DET", name: "Detective Pikachu", total: 18, tcgApiId: "det1", tcgdexId: "det1" },
           { id: "sm9", code: "TEU", name: "Team Up", total: 196, tcgApiId: "sm9", tcgdexId: "sm9" },
           { id: "sm8", code: "LOT", name: "Lost Thunder", total: 236, tcgApiId: "sm8", tcgdexId: "sm8" },
-          { id: "sm75", code: "DRM", name: "Dragon Majesty", total: 78, tcgApiId: "sm75", tcgdexId: "sm7.5" },
           { id: "sm7", code: "CES", name: "Celestial Storm", total: 183, tcgApiId: "sm7", tcgdexId: "sm7" },
           { id: "sm6", code: "FLI", name: "Forbidden Light", total: 146, tcgApiId: "sm6", tcgdexId: "sm6" },
           { id: "sm5", code: "UPR", name: "Ultra Prism", total: 173, tcgApiId: "sm5", tcgdexId: "sm5" },
           { id: "sm4", code: "CIN", name: "Crimson Invasion", total: 124, tcgApiId: "sm4", tcgdexId: "sm4" },
-          { id: "sm35", code: "SLG", name: "Shining Legends", total: 78, tcgApiId: "sm35", tcgdexId: "sm3.5" },
           { id: "sm3", code: "BUS", name: "Burning Shadows", total: 169, tcgApiId: "sm3", tcgdexId: "sm3" },
           { id: "sm2", code: "GRI", name: "Guardians Rising", total: 169, tcgApiId: "sm2", tcgdexId: "sm2" },
           { id: "sm1", code: "SUM", name: "Sun & Moon", total: 163, tcgApiId: "sm1", tcgdexId: "sm1" }
@@ -789,7 +619,6 @@
           { id: "xy8", code: "BKT", name: "BREAKthrough", total: 165, tcgApiId: "xy8", tcgdexId: "xy8" },
           { id: "xy7", code: "AOR", name: "Ancient Origins", total: 100, tcgApiId: "xy7", tcgdexId: "xy7" },
           { id: "xy6", code: "ROS", name: "Roaring Skies", total: 112, tcgApiId: "xy6", tcgdexId: "xy6" },
-          { id: "dc1", code: "DCR", name: "Double Crisis", total: 34, tcgApiId: "dc1", tcgdexId: "dc1" },
           { id: "xy5", code: "PRC", name: "Primal Clash", total: 164, tcgApiId: "xy5", tcgdexId: "xy5" },
           { id: "xy4", code: "PHF", name: "Phantom Forces", total: 124, tcgApiId: "xy4", tcgdexId: "xy4" },
           { id: "xy3", code: "FFI", name: "Furious Fists", total: 114, tcgApiId: "xy3", tcgdexId: "xy3" },
@@ -801,83 +630,12 @@
         series: "Black & White Series",
         sets: [
           { id: "bw11", code: "LTR", name: "Legendary Treasures", total: 140, tcgApiId: "bw11", tcgdexId: "bw11" },
-          { id: "bw10", code: "PLB", name: "Plasma Blast", total: 105, tcgApiId: "bw10", tcgdexId: "bw10" },
-          { id: "bw9", code: "PLF", name: "Plasma Freeze", total: 122, tcgApiId: "bw9", tcgdexId: "bw9" },
-          { id: "bw8", code: "PLS", name: "Plasma Storm", total: 138, tcgApiId: "bw8", tcgdexId: "bw8" },
           { id: "bw7", code: "BCR", name: "Boundaries Crossed", total: 153, tcgApiId: "bw7", tcgdexId: "bw7" },
-          { id: "dv1", code: "DRV", name: "Dragon Vault", total: 21, tcgApiId: "dv1", tcgdexId: "dv1" },
-          { id: "bw6", code: "DRX", name: "Dragons Exalted", total: 128, tcgApiId: "bw6", tcgdexId: "bw6" },
-          { id: "bw5", code: "DEX", name: "Dark Explorers", total: 111, tcgApiId: "bw5", tcgdexId: "bw5" },
-          { id: "bw4", code: "NXD", name: "Next Destinies", total: 103, tcgApiId: "bw4", tcgdexId: "bw4" },
-          { id: "bw3", code: "NVI", name: "Noble Victories", total: 102, tcgApiId: "bw3", tcgdexId: "bw3" },
-          { id: "bw2", code: "EPO", name: "Emerging Powers", total: 98, tcgApiId: "bw2", tcgdexId: "bw2" },
           { id: "bw1", code: "BLW", name: "Black & White", total: 115, tcgApiId: "bw1", tcgdexId: "bw1" }
         ]
       },
       {
-        series: "HeartGold & SoulSilver / Call of Legends",
-        sets: [
-          { id: "col1", code: "CL", name: "Call of Legends", total: 106, tcgApiId: "col1", tcgdexId: "col1" },
-          { id: "hgss4", code: "TM", name: "HS—Triumphant", total: 103, tcgApiId: "hgss4", tcgdexId: "hgss4" },
-          { id: "hgss3", code: "UD", name: "HS—Undaunted", total: 91, tcgApiId: "hgss3", tcgdexId: "hgss3" },
-          { id: "hgss2", code: "UL", name: "HS—Unleashed", total: 96, tcgApiId: "hgss2", tcgdexId: "hgss2" },
-          { id: "hgss1", code: "HS", name: "HeartGold & SoulSilver", total: 124, tcgApiId: "hgss1", tcgdexId: "hgss1" }
-        ]
-      },
-      {
-        series: "Diamond & Pearl / Platinum Series",
-        sets: [
-          { id: "pl4", code: "AR", name: "Platinum—Arceus", total: 111, tcgApiId: "pl4", tcgdexId: "pl4" },
-          { id: "pl3", code: "SV", name: "Platinum—Supreme Victors", total: 153, tcgApiId: "pl3", tcgdexId: "pl3" },
-          { id: "pl2", code: "RR", name: "Platinum—Rising Rivals", total: 120, tcgApiId: "pl2", tcgdexId: "pl2" },
-          { id: "pl1", code: "PL", name: "Platinum", total: 133, tcgApiId: "pl1", tcgdexId: "pl1" },
-          { id: "dp7", code: "SF", name: "Stormfront", total: 106, tcgApiId: "dp7", tcgdexId: "dp7" },
-          { id: "dp6", code: "LA", name: "Legends Awakened", total: 146, tcgApiId: "dp6", tcgdexId: "dp6" },
-          { id: "dp5", code: "MD", name: "Majestic Dawn", total: 100, tcgApiId: "dp5", tcgdexId: "dp5" },
-          { id: "dp4", code: "GE", name: "Great Encounters", total: 106, tcgApiId: "dp4", tcgdexId: "dp4" },
-          { id: "dp3", code: "SW", name: "Secret Wonders", total: 132, tcgApiId: "dp3", tcgdexId: "dp3" },
-          { id: "dp2", code: "MT", name: "Mysterious Treasures", total: 124, tcgApiId: "dp2", tcgdexId: "dp2" },
-          { id: "dp1", code: "DP", name: "Diamond & Pearl", total: 130, tcgApiId: "dp1", tcgdexId: "dp1" }
-        ]
-      },
-      {
-        series: "EX Series",
-        sets: [
-          { id: "ex16", code: "PK", name: "EX Power Keepers", total: 108, tcgApiId: "ex16", tcgdexId: "ex16" },
-          { id: "ex15", code: "DF", name: "EX Dragon Frontiers", total: 101, tcgApiId: "ex15", tcgdexId: "ex15" },
-          { id: "ex14", code: "CG", name: "EX Crystal Guardians", total: 100, tcgApiId: "ex14", tcgdexId: "ex14" },
-          { id: "ex13", code: "HP", name: "EX Holon Phantoms", total: 111, tcgApiId: "ex13", tcgdexId: "ex13" },
-          { id: "ex12", code: "LM", name: "EX Legend Maker", total: 93, tcgApiId: "ex12", tcgdexId: "ex12" },
-          { id: "ex11", code: "DS", name: "EX Delta Species", total: 114, tcgApiId: "ex11", tcgdexId: "ex11" },
-          { id: "ex10", code: "UF", name: "EX Unseen Forces", total: 145, tcgApiId: "ex10", tcgdexId: "ex10" },
-          { id: "ex9", code: "EM", name: "EX Emerald", total: 107, tcgApiId: "ex9", tcgdexId: "ex9" },
-          { id: "ex8", code: "DX", name: "EX Deoxys", total: 108, tcgApiId: "ex8", tcgdexId: "ex8" },
-          { id: "ex7", code: "TRR", name: "EX Team Rocket Returns", total: 111, tcgApiId: "ex7", tcgdexId: "ex7" },
-          { id: "ex6", code: "RG", name: "EX FireRed & LeafGreen", total: 116, tcgApiId: "ex6", tcgdexId: "ex6" },
-          { id: "ex5", code: "HL", name: "EX Hidden Legends", total: 102, tcgApiId: "ex5", tcgdexId: "ex5" },
-          { id: "ex4", code: "MA", name: "EX Team Magma vs Team Aqua", total: 97, tcgApiId: "ex4", tcgdexId: "ex4" },
-          { id: "ex3", code: "DR", name: "EX Dragon", total: 100, tcgApiId: "ex3", tcgdexId: "ex3" },
-          { id: "ex2", code: "SS", name: "EX Sandstorm", total: 100, tcgApiId: "ex2", tcgdexId: "ex2" },
-          { id: "ex1", code: "RS", name: "EX Ruby & Sapphire", total: 109, tcgApiId: "ex1", tcgdexId: "ex1" }
-        ]
-      },
-      {
-        series: "e-Card & Neo / Gym Series",
-        sets: [
-          { id: "ecard3", code: "SK", name: "Skyridge", total: 182, tcgApiId: "ecard3", tcgdexId: "ecard3" },
-          { id: "ecard2", code: "AQ", name: "Aquapolis", total: 186, tcgApiId: "ecard2", tcgdexId: "ecard2" },
-          { id: "ecard1", code: "EX", name: "Expedition Base Set", total: 165, tcgApiId: "ecard1", tcgdexId: "ecard1" },
-          { id: "base6", code: "LC", name: "Legendary Collection", total: 110, tcgApiId: "base6", tcgdexId: "lc" },
-          { id: "neo4", code: "N4", name: "Neo Destiny", total: 113, tcgApiId: "neo4", tcgdexId: "neo4" },
-          { id: "neo3", code: "N3", name: "Neo Revelation", total: 66, tcgApiId: "neo3", tcgdexId: "neo3" },
-          { id: "neo2", code: "N2", name: "Neo Discovery", total: 75, tcgApiId: "neo2", tcgdexId: "neo2" },
-          { id: "neo1", code: "N1", name: "Neo Genesis", total: 111, tcgApiId: "neo1", tcgdexId: "neo1" },
-          { id: "gym2", code: "G2", name: "Gym Challenge", total: 132, tcgApiId: "gym2", tcgdexId: "gym2" },
-          { id: "gym1", code: "G1", name: "Gym Heroes", total: 132, tcgApiId: "gym1", tcgdexId: "gym1" }
-        ]
-      },
-      {
-        series: "Base Set Series (Wizards of the Coast)",
+        series: "Wizards & Classic Series",
         sets: [
           { id: "base5", code: "TR", name: "Team Rocket", total: 83, tcgApiId: "base5", tcgdexId: "base5" },
           { id: "base4", code: "B2", name: "Base Set 2", total: 130, tcgApiId: "base4", tcgdexId: "base4" },
@@ -888,657 +646,36 @@
         ]
       }
     ],
-
-    // =========================================================================
-    // SEZIONE GIAPPONESE (JP)
-    // =========================================================================
     japanese: [
       {
         series: "Mega Evolution Series (JP • M)",
         sets: [
-          { id: "jp-m2", code: "M2", name: "Inferno X (インフェルノX)", total: 106, tcgdexJa: "M2", fallbackEn: "me2" },
-          { id: "jp-m1s", code: "M1S", name: "Mega Symphonia (メガシンフォニア)", total: 92, tcgdexJa: "M1S", fallbackEn: "me1" },
-          { id: "jp-m1l", code: "M1L", name: "Mega Brave (メガブレイブ)", total: 92, tcgdexJa: "M1L", fallbackEn: "me1" }
+          { id: "jp-m2", code: "M2", name: "Inferno X", total: 106, tcgdexJa: "M2", fallbackEn: "me2" },
+          { id: "jp-m1s", code: "M1S", name: "Mega Symphonia", total: 92, tcgdexJa: "M1S", fallbackEn: "me1" }
         ]
       },
       {
         series: "Scarlet & Violet Series (JP • SV)",
         sets: [
-          { id: "jp-sv10", code: "SV10", name: "The Glory of Team Rocket (ロケット団の栄光)", total: 130, tcgdexJa: "SV10", fallbackEn: "sv10" },
-          { id: "jp-sv9a", code: "SV9a", name: "Hot Wind Arena (熱風のアリーナ)", total: 92, tcgdexJa: "SV9a", fallbackEn: "sv10" },
-          { id: "jp-sv9", code: "SV9", name: "Battle Partners (バトルパートナーズ)", total: 132, tcgdexJa: "SV9", fallbackEn: "sv9" },
-          { id: "jp-sv8a", code: "SV8a", name: "Terastal Fest ex (テラスタルフェスex)", total: 237, tcgdexJa: "SV8a", fallbackEn: "sv8pt5" },
-          { id: "jp-sv8", code: "SV8", name: "Super Electric Breaker (超電ブレイカー)", total: 136, tcgdexJa: "SV8", fallbackEn: "sv8" },
-          { id: "jp-sv7a", code: "SV7a", name: "Paradise Dragona (楽園ドラゴーナ)", total: 94, tcgdexJa: "SV7a", fallbackEn: "sv8" },
-          { id: "jp-sv7", code: "SV7", name: "Stellar Miracle (ステラミラクル)", total: 135, tcgdexJa: "SV7", fallbackEn: "sv7" },
-          { id: "jp-sv6a", code: "SV6a", name: "Night Wanderer (ナイトワンダラー)", total: 94, tcgdexJa: "SV6a", fallbackEn: "sv6pt5" },
-          { id: "jp-sv6", code: "SV6", name: "Transformation Mask (変幻の仮面)", total: 133, tcgdexJa: "SV6", fallbackEn: "sv6" },
-          { id: "jp-sv5a", code: "SV5a", name: "Crimson Haze (クリムゾンヘイズ)", total: 96, tcgdexJa: "SV5a", fallbackEn: "sv6" },
-          { id: "jp-sv5m", code: "SV5M", name: "Cyber Judge (サイバージャッジ)", total: 99, tcgdexJa: "SV5M", fallbackEn: "sv5" },
-          { id: "jp-sv5k", code: "SV5K", name: "Wild Force (ワイルドフォース)", total: 99, tcgdexJa: "SV5K", fallbackEn: "sv5" },
-          { id: "jp-sv4a", code: "SV4a", name: "Shiny Treasure ex (シャイニートレジャーex)", total: 360, tcgdexJa: "SV4a", fallbackEn: "sv4pt5" },
-          { id: "jp-sv4m", code: "SV4M", name: "Future Flash (未来の一閃)", total: 95, tcgdexJa: "SV4M", fallbackEn: "sv4" },
-          { id: "jp-sv4k", code: "SV4K", name: "Ancient Roar (古代の咆哮)", total: 95, tcgdexJa: "SV4K", fallbackEn: "sv4" },
-          { id: "jp-sv3a", code: "SV3a", name: "Raging Surf (レイジングサーフ)", total: 92, tcgdexJa: "SV3a", fallbackEn: "sv4" },
-          { id: "jp-sv3", code: "SV3", name: "Ruler of the Black Flame (黒炎の支配者)", total: 141, tcgdexJa: "SV3", fallbackEn: "sv3" },
-          { id: "jp-sv2a", code: "SV2a", name: "Pokémon Card 151 (ポケモンカード151)", total: 210, tcgdexJa: "SV2a", fallbackEn: "sv3pt5" },
-          { id: "jp-sv2d", code: "SV2D", name: "Clay Burst (クレイバースト)", total: 96, tcgdexJa: "SV2D", fallbackEn: "sv2" },
-          { id: "jp-sv2p", code: "SV2P", name: "Snow Hazard (スノーハザード)", total: 96, tcgdexJa: "SV2P", fallbackEn: "sv2" },
-          { id: "jp-sv1a", code: "SV1a", name: "Triplet Beat (トリプレットビート)", total: 103, tcgdexJa: "SV1a", fallbackEn: "sv2" },
-          { id: "jp-sv1v", code: "SV1V", name: "Violet ex (バイオレットex)", total: 108, tcgdexJa: "SV1V", fallbackEn: "sv1" },
-          { id: "jp-sv1s", code: "SV1S", name: "Scarlet ex (スカーレットex)", total: 108, tcgdexJa: "SV1S", fallbackEn: "sv1" }
+          { id: "jp-sv10", code: "SV10", name: "The Glory of Team Rocket", total: 130, tcgdexJa: "SV10", fallbackEn: "sv10" },
+          { id: "jp-sv9", code: "SV9", name: "Battle Partners", total: 132, tcgdexJa: "SV9", fallbackEn: "sv9" },
+          { id: "jp-sv8a", code: "SV8a", name: "Terastal Fest ex", total: 237, tcgdexJa: "SV8a", fallbackEn: "sv8pt5" },
+          { id: "jp-sv8", code: "SV8", name: "Super Electric Breaker", total: 136, tcgdexJa: "SV8", fallbackEn: "sv8" },
+          { id: "jp-sv7", code: "SV7", name: "Stellar Miracle", total: 135, tcgdexJa: "SV7", fallbackEn: "sv7" },
+          { id: "jp-sv6", code: "SV6", name: "Transformation Mask", total: 133, tcgdexJa: "SV6", fallbackEn: "sv6" },
+          { id: "jp-sv2a", code: "SV2a", name: "Pokémon Card 151", total: 210, tcgdexJa: "SV2a", fallbackEn: "sv3pt5" },
+          { id: "jp-sv1s", code: "SV1S", name: "Scarlet ex", total: 108, tcgdexJa: "SV1S", fallbackEn: "sv1" }
         ]
       },
       {
         series: "Sword & Shield Series (JP • S)",
         sets: [
-          { id: "jp-s12a", code: "S12a", name: "VSTAR Universe (VSTARユニバース)", total: 262, tcgdexJa: "S12a", fallbackEn: "swsh12pt5" },
-          { id: "jp-s12", code: "S12", name: "Paradigm Trigger (パラダイムトリガー)", total: 124, tcgdexJa: "S12", fallbackEn: "swsh12" },
-          { id: "jp-s11a", code: "S11a", name: "Incandescent Arcana (白熱のアルカナ)", total: 94, tcgdexJa: "S11a", fallbackEn: "swsh12" },
-          { id: "jp-s11", code: "S11", name: "Lost Abyss (ロストアビス)", total: 127, tcgdexJa: "S11", fallbackEn: "swsh11" },
-          { id: "jp-s10b", code: "S10b", name: "Pokémon GO (ポケモンGO)", total: 91, tcgdexJa: "S10b", fallbackEn: "pgo" },
-          { id: "jp-s10a", code: "S10a", name: "Dark Phantasma (ダークファンタズマ)", total: 99, tcgdexJa: "S10a", fallbackEn: "swsh11" },
-          { id: "jp-s10d", code: "S10D", name: "Time Gazer (タイムゲイザー)", total: 86, tcgdexJa: "S10D", fallbackEn: "swsh10" },
-          { id: "jp-s10p", code: "S10P", name: "Space Juggler (スペースジャグラー)", total: 86, tcgdexJa: "S10P", fallbackEn: "swsh10" },
-          { id: "jp-s9a", code: "S9a", name: "Battle Region (バトルリージョン)", total: 95, tcgdexJa: "S9a", fallbackEn: "swsh10" },
-          { id: "jp-s9", code: "S9", name: "Star Birth (スターバース)", total: 126, tcgdexJa: "S9", fallbackEn: "swsh9" },
-          { id: "jp-s8b", code: "S8b", name: "VMAX Climax (VMAXクライマックス)", total: 284, tcgdexJa: "S8b", fallbackEn: "swsh9" },
-          { id: "jp-s8a", code: "S8a", name: "25th Anniversary Collection", total: 30, tcgdexJa: "S8a", fallbackEn: "cel25" },
-          { id: "jp-s8", code: "S8", name: "Fusion Arts (フュージョンアーツ)", total: 129, tcgdexJa: "S8", fallbackEn: "swsh8" },
-          { id: "jp-s6a", code: "S6a", name: "Eevee Heroes (イーブイヒーローズ)", total: 101, tcgdexJa: "S6a", fallbackEn: "swsh7" },
-          { id: "jp-s4a", code: "S4a", name: "Shiny Star V (シャイニースターV)", total: 330, tcgdexJa: "S4a", fallbackEn: "swsh45" },
-          { id: "jp-s1w", code: "S1W", name: "Sword (ソード)", total: 75, tcgdexJa: "S1W", fallbackEn: "swsh1" },
-          { id: "jp-s1h", code: "S1H", name: "Shield (シールド)", total: 75, tcgdexJa: "S1H", fallbackEn: "swsh1" }
+          { id: "jp-s12a", code: "S12a", name: "VSTAR Universe", total: 262, tcgdexJa: "S12a", fallbackEn: "swsh12pt5" },
+          { id: "jp-s8b", code: "S8b", name: "VMAX Climax", total: 284, tcgdexJa: "S8b", fallbackEn: "swsh9" },
+          { id: "jp-s6a", code: "S6a", name: "Eevee Heroes", total: 101, tcgdexJa: "S6a", fallbackEn: "swsh7" }
         ]
       },
       {
-        series: "Sun & Moon Series (JP • SM)",
+        series: "Classic & Base Series (JP)",
         sets: [
-          { id: "jp-sm12a", code: "SM12a", name: "Tag All Stars (タッグオールスターズ)", total: 226, tcgdexJa: "SM12a", fallbackEn: "sm12" },
-          { id: "jp-sm12", code: "SM12", name: "Alter Genesis (オルタージェネシス)", total: 117, tcgdexJa: "SM12", fallbackEn: "sm12" },
-          { id: "jp-sm11b", code: "SM11b", name: "Dream League (ドリームリーグ)", total: 75, tcgdexJa: "SM11b", fallbackEn: "sm12" },
-          { id: "jp-sm11", code: "SM11", name: "Miracle Twin (ミラクルツイン)", total: 114, tcgdexJa: "SM11", fallbackEn: "sm11" },
-          { id: "jp-sm10", code: "SM10", name: "Double Blaze (ダブルブレイズ)", total: 115, tcgdexJa: "SM10", fallbackEn: "sm10" },
-          { id: "jp-sm9", code: "SM9", name: "Tag Bolt (タッグボルト)", total: 120, tcgdexJa: "SM9", fallbackEn: "sm9" },
-          { id: "jp-sm8b", code: "SM8b", name: "GX Ultra Shiny (GXウルトラシャイニー)", total: 250, tcgdexJa: "SM8b", fallbackEn: "sm115" },
-          { id: "jp-sm1s", code: "SM1S", name: "Collection Sun (コレクションサン)", total: 72, tcgdexJa: "SM1S", fallbackEn: "sm1" },
-          { id: "jp-sm1m", code: "SM1M", name: "Collection Moon (コレクションムーン)", total: 72, tcgdexJa: "SM1M", fallbackEn: "sm1" }
-        ]
-      },
-      {
-        series: "XY / BW / Classic Era (JP)",
-        sets: [
-          { id: "jp-cp6", code: "CP6", name: "Expansion Pack 20th Anniversary", total: 103, tcgdexJa: "CP6", fallbackEn: "xy12" },
-          { id: "jp-xy1", code: "XY1", name: "Collection X / Collection Y", total: 126, tcgdexJa: "XY1", fallbackEn: "xy1" },
-          { id: "jp-bw1", code: "BW1", name: "Black Collection / White Collection", total: 112, tcgdexJa: "BW1", fallbackEn: "bw1" },
-          { id: "jp-l1", code: "L1", name: "HeartGold / SoulSilver Collection", total: 148, tcgdexJa: "L1", fallbackEn: "hgss1" },
-          { id: "jp-dp1", code: "DP1", name: "Space-Time Creation (時空の創造)", total: 125, tcgdexJa: "DP1", fallbackEn: "dp1" },
-          { id: "jp-adv1", code: "ADV1", name: "Expansion Pack (第1弾拡張パック ADV)", total: 55, tcgdexJa: "ADV1", fallbackEn: "ex1" },
-          { id: "jp-neo1", code: "NEO1", name: "Gold, Silver, to a New World...", total: 96, tcgdexJa: "NEO1", fallbackEn: "neo1" },
-          { id: "jp-pmcg4", code: "TR-JP", name: "Rocket Gang (ロケット団)", total: 65, tcgdexJa: "PMCG4", fallbackEn: "base5" },
-          { id: "jp-pmcg3", code: "FO-JP", name: "Mystery of the Fossils (化石の秘密)", total: 48, tcgdexJa: "PMCG3", fallbackEn: "base3" },
-          { id: "jp-pmcg2", code: "JU-JP", name: "Pokémon Jungle (ポケモンジャングル)", total: 48, tcgdexJa: "PMCG2", fallbackEn: "base2" },
-          { id: "jp-pmcg1", code: "BS-JP", name: "Expansion Pack (第1弾拡張パック 1996)", total: 102, tcgdexJa: "PMCG1", fallbackEn: "base1" }
-        ]
-      }
-    ]
-  };
-
-  // =========================================================================
-  // 2. STATO DELL'APPLICAZIONE E PERSISTENZA (LOCALSTORAGE)
-  // =========================================================================
-  const STORAGE_KEY = "pokevault_collection_v3";
-  const CACHE_KEY = "pokevault_cards_cache_v3";
-
-  let collection = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-  let cardsCache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
-
-  let currentRegion = "western"; // 'western' | 'japanese'
-  let activeSet = null;
-  let activeSetCards = [];
-  let currentFilter = "all"; // 'all' | 'owned' | 'missing'
-  let editingCard = null;
-
-  function saveCollection() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
-    updateStats();
-  }
-
-  function saveCache() {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cardsCache));
-    } catch (e) {
-      // Se localStorage è pieno, manteniamo comunque la cache in memoria
-    }
-  }
-
-  // =========================================================================
-  // 3. NAVIGAZIONE E STATISTICHE
-  // =========================================================================
-  function switchRegion(region) {
-    currentRegion = region;
-    document.getElementById("tab-western").classList.toggle("active", region === "western");
-    document.getElementById("tab-japanese").classList.toggle("active", region === "japanese");
-    document.getElementById("stat-region-label").textContent = region === "western" ? "Occidentali" : "Giapponesi";
-    closeSetView();
-    renderSeries();
-    updateStats();
-  }
-
-  function updateStats() {
-    let ownedRegion = 0;
-    let valueRegion = 0;
-    let ownedGlobal = 0;
-    let valueGlobal = 0;
-    let setsStarted = 0;
-
-    const regionSets = CATALOG[currentRegion].flatMap(b => b.sets);
-    const regionSetIds = new Set(regionSets.map(s => s.id));
-    const startedSetIds = new Set();
-
-    Object.entries(collection).forEach(([key, entry]) => {
-      if (!entry || !entry.owned) return;
-      ownedGlobal++;
-      const price = parseFloat(entry.price) || 0;
-      valueGlobal += price;
-
-      const setId = entry.setId;
-      if (regionSetIds.has(setId)) {
-        ownedRegion++;
-        valueRegion += price;
-        startedSetIds.add(setId);
-      }
-    });
-
-    setsStarted = startedSetIds.size;
-
-    document.getElementById("stat-owned-region").textContent = ownedRegion;
-    document.getElementById("stat-total-all").textContent = `Totale globale: ${ownedGlobal} carte`;
-    document.getElementById("stat-value-region").textContent = formatEuro(valueRegion);
-    document.getElementById("stat-value-all").textContent = `Globale: ${formatEuro(valueGlobal)}`;
-    document.getElementById("stat-sets-started").textContent = setsStarted;
-    document.getElementById("stat-sets-total").textContent = `su ${regionSets.length} espansioni catalogate`;
-  }
-
-  function formatEuro(num) {
-    return "€ " + num.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  function getSetSymbolUrl(setObj) {
-    const apiCode = setObj.tcgApiId || setObj.fallbackEn;
-    if (!apiCode) return "";
-    return `https://images.pokemontcg.io/${apiCode}/symbol.png`;
-  }
-
-  // =========================================================================
-  // 4. RENDERING BLOCCHI E SET (OVERVIEW)
-  // =========================================================================
-  function renderSeries() {
-    const container = document.getElementById("series-container");
-    const query = document.getElementById("search-set-input").value.trim().toLowerCase();
-    const blocks = CATALOG[currentRegion];
-
-    container.innerHTML = "";
-
-    blocks.forEach(block => {
-      const filteredSets = block.sets.filter(s =>
-        s.name.toLowerCase().includes(query) ||
-        s.code.toLowerCase().includes(query) ||
-        block.series.toLowerCase().includes(query)
-      );
-
-      if (filteredSets.length === 0) return;
-
-      const blockEl = document.createElement("div");
-      blockEl.className = "series-block";
-
-      blockEl.innerHTML = `
-        <div class="series-header">
-          <div class="series-title">${block.series}</div>
-          <span class="series-badge">${filteredSets.length} Set</span>
-        </div>
-        <div class="sets-grid"></div>
-      `;
-
-      const grid = blockEl.querySelector(".sets-grid");
-
-      filteredSets.forEach(setObj => {
-        const ownedCount = Object.values(collection).filter(c => c.owned && c.setId === setObj.id).length;
-        const cachedTotal = cardsCache[setObj.id] ? cardsCache[setObj.id].length : setObj.total;
-        const total = Math.max(cachedTotal, ownedCount, 1);
-        const pct = Math.min(100, Math.round((ownedCount / total) * 100));
-        const symbolUrl = getSetSymbolUrl(setObj);
-
-        const cardEl = document.createElement("div");
-        cardEl.className = "set-card";
-        cardEl.onclick = () => openSetView(setObj, block.series);
-
-        cardEl.innerHTML = `
-          <div class="set-card-top">
-            <div class="set-symbol-wrap">
-              ${symbolUrl
-                ? `<img src="${symbolUrl}" alt="${setObj.code}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                   <span class="set-symbol-fallback" style="display:none;">${setObj.code}</span>`
-                : `<span class="set-symbol-fallback">${setObj.code}</span>`
-              }
-            </div>
-            <div class="set-info">
-              <h3>${setObj.name}</h3>
-              <span>Codice: ${setObj.code} • ${total} carte</span>
-            </div>
-          </div>
-          <div class="progress-wrap">
-            <div class="progress-meta">
-              <span>${ownedCount} / ${total}</span>
-              <span>${pct}%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width:${pct}%"></div>
-            </div>
-          </div>
-        `;
-        grid.appendChild(cardEl);
-      });
-
-      container.appendChild(blockEl);
-    });
-  }
-
-  // =========================================================================
-  // 5. CARICAMENTO CARTE DEL SET (API + CACHE + FALLBACK)
-  // =========================================================================
-  async function openSetView(setObj, seriesName) {
-    activeSet = { ...setObj, seriesName };
-    currentFilter = "all";
-    document.querySelectorAll(".pill").forEach(p => p.classList.toggle("active", p.dataset.filter === "all"));
-    document.getElementById("search-card-input").value = "";
-
-    document.getElementById("series-overview").style.display = "none";
-    document.getElementById("set-detail-view").style.display = "block";
-    document.getElementById("detail-set-title").textContent = setObj.name;
-
-    const symWrap = document.getElementById("detail-set-symbol");
-    const symUrl = getSetSymbolUrl(setObj);
-    symWrap.innerHTML = symUrl
-      ? `<img src="${symUrl}" alt="${setObj.code}" onerror="this.outerHTML='<span class=\\'set-symbol-fallback\\'>${setObj.code}</span>'" />`
-      : `<span class="set-symbol-fallback">${setObj.code}</span>`;
-
-    const grid = document.getElementById("cards-grid");
-    const loader = document.getElementById("cards-loading");
-    grid.innerHTML = "";
-
-    if (cardsCache[setObj.id] && cardsCache[setObj.id].length > 0) {
-      activeSetCards = cardsCache[setObj.id];
-      updateDetailSubtitle();
-      renderSetCards();
-      return;
-    }
-
-    loader.style.display = "block";
-    let fetchedCards = [];
-
-    try {
-      if (currentRegion === "western") {
-        fetchedCards = await fetchWesternSet(setObj);
-      } else {
-        fetchedCards = await fetchJapaneseSet(setObj);
-      }
-    } catch (err) {
-      console.warn("Errore recupero API:", err);
-    }
-
-    // Se l'API non ha ancora indicizzato un set nuovissimo (es. ultimissime uscite), generiamo gli slot numerati
-    if (!fetchedCards || fetchedCards.length === 0) {
-      fetchedCards = buildPlaceholderDeck(setObj);
-    }
-
-    // Unisci eventuali carte manuali già salvate dall'utente per questo set
-    const manualCards = Object.values(collection)
-      .filter(c => c.setId === setObj.id && c.isManual)
-      .map(c => ({
-        id: c.cardId,
-        number: c.number || "—",
-        name: c.name || "Carta Manuale",
-        image: c.customImage || getCardBackUrl()
-      }));
-
-    activeSetCards = [...fetchedCards, ...manualCards];
-    cardsCache[setObj.id] = activeSetCards;
-    saveCache();
-
-    loader.style.display = "none";
-    updateDetailSubtitle();
-    renderSetCards();
-  }
-
-  async function fetchWesternSet(setObj) {
-    // 1. Tentativo Pokémon TCG API v2
-    if (setObj.tcgApiId) {
-      try {
-        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${setObj.tcgApiId}&orderBy=number&pageSize=250`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data && json.data.length > 0) {
-            return json.data
-              .sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10))
-              .map(c => ({
-                id: `${setObj.id}-${c.number}`,
-                number: c.number,
-                name: c.name,
-                image: c.images?.small || c.images?.large || getCardBackUrl()
-              }));
-          }
-        }
-      } catch (e) {}
-    }
-
-    // 2. Tentativo TCGdex (EN)
-    if (setObj.tcgdexId) {
-      try {
-        const res = await fetch(`https://api.tcgdex.net/v2/en/sets/${setObj.tcgdexId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.cards && json.cards.length > 0) {
-            return json.cards.map(c => ({
-              id: `${setObj.id}-${c.localId}`,
-              number: c.localId,
-              name: c.name,
-              image: c.image ? `${c.image}/low.webp` : getCardBackUrl()
-            }));
-          }
-        }
-      } catch (e) {}
-    }
-
-    return [];
-  }
-
-  async function fetchJapaneseSet(setObj) {
-    // 1. Tentativo TCGdex (JA)
-    if (setObj.tcgdexJa) {
-      try {
-        const res = await fetch(`https://api.tcgdex.net/v2/ja/sets/${setObj.tcgdexJa}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.cards && json.cards.length > 0) {
-            return json.cards.map(c => ({
-              id: `${setObj.id}-${c.localId}`,
-              number: c.localId,
-              name: c.name,
-              image: c.image ? `${c.image}/low.webp` : getCardBackUrl()
-            }));
-          }
-        }
-      } catch (e) {}
-    }
-
-    // 2. Fallback sul set occidentale corrispondente se l'endpoint JA non ha ancora le immagini
-    if (setObj.fallbackEn) {
-      const fb = await fetchWesternSet({ id: setObj.id, tcgApiId: setObj.fallbackEn, tcgdexId: setObj.fallbackEn });
-      if (fb.length > 0) return fb;
-    }
-
-    return [];
-  }
-
-  function buildPlaceholderDeck(setObj) {
-    const count = setObj.total || 60;
-    const arr = [];
-    for (let i = 1; i <= count; i++) {
-      const numStr = String(i).padStart(3, "0");
-      arr.push({
-        id: `${setObj.id}-${numStr}`,
-        number: numStr,
-        name: `${setObj.code} #${numStr}`,
-        image: getCardBackUrl()
-      });
-    }
-    return arr;
-  }
-
-  function getCardBackUrl() {
-    return "https://images.pokemontcg.io/base1/back.png";
-  }
-
-  function closeSetView() {
-    activeSet = null;
-    document.getElementById("set-detail-view").style.display = "none";
-    document.getElementById("series-overview").style.display = "block";
-    renderSeries();
-  }
-
-  function updateDetailSubtitle() {
-    if (!activeSet) return;
-    const ownedCount = activeSetCards.filter(c => collection[c.id]?.owned).length;
-    document.getElementById("detail-set-subtitle").textContent =
-      `${activeSet.seriesName} • ${ownedCount} / ${activeSetCards.length} possedute`;
-  }
-
-  function setCardFilter(filter, btnEl) {
-    currentFilter = filter;
-    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
-    btnEl.classList.add("active");
-    renderSetCards();
-  }
-
-  // =========================================================================
-  // 6. RENDERING GRIGLIA CARTE CON EFFETTO SCALA DI GRIGI E FLAG
-  // =========================================================================
-  function renderSetCards() {
-    const grid = document.getElementById("cards-grid");
-    const query = document.getElementById("search-card-input").value.trim().toLowerCase();
-    grid.innerHTML = "";
-
-    const filtered = activeSetCards.filter(card => {
-      const isOwned = !!collection[card.id]?.owned;
-      if (currentFilter === "owned" && !isOwned) return false;
-      if (currentFilter === "missing" && isOwned) return false;
-      if (query && !card.name.toLowerCase().includes(query) && !String(card.number).toLowerCase().includes(query)) {
-        return false;
-      }
-      return true;
-    });
-
-    if (filtered.length === 0) {
-      grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:2rem;">Nessuna carta trovata con questo filtro.</p>`;
-      return;
-    }
-
-    filtered.forEach(card => {
-      const saved = collection[card.id] || {};
-      const isOwned = !!saved.owned;
-
-      const cardEl = document.createElement("div");
-      cardEl.className = `poke-card ${isOwned ? "owned" : ""}`;
-
-      const priceTag = saved.price ? `<span class="tag owned-tag">€ ${parseFloat(saved.price).toFixed(2)}</span>` : "";
-      const condTag = isOwned && saved.condition ? `<span class="tag">${saved.condition.split(" ")[0]}</span>` : "";
-      const dateTag = isOwned && saved.date ? `<span class="tag">${saved.date}</span>` : "";
-
-      cardEl.innerHTML = `
-        <div class="card-img-box" onclick="openCardModal('${card.id}')">
-          <button class="flag-btn" title="${isOwned ? 'Rimuovi dalla collezione' : 'Aggiungi alla collezione'}" onclick="event.stopPropagation(); toggleQuickFlag('${card.id}')">
-            ${isOwned ? "✓" : "+"}
-          </button>
-          <img src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.src='${getCardBackUrl()}'" />
-        </div>
-        <div class="card-meta" onclick="openCardModal('${card.id}')">
-          <div class="card-title-row">
-            <span class="card-name" title="${card.name}">${card.name}</span>
-            <span class="card-num">#${card.number}</span>
-          </div>
-          <div class="card-tags">
-            ${isOwned ? `${condTag}${priceTag}${dateTag}` : `<span class="tag">Mancante</span>`}
-          </div>
-        </div>
-      `;
-      grid.appendChild(cardEl);
-    });
-  }
-
-  function toggleQuickFlag(cardId) {
-    const card = activeSetCards.find(c => c.id === cardId);
-    if (!card || !activeSet) return;
-
-    const existing = collection[cardId] || {};
-    const nextOwned = !existing.owned;
-
-    collection[cardId] = {
-      ...existing,
-      cardId: card.id,
-      setId: activeSet.id,
-      number: card.number,
-      name: card.name,
-      owned: nextOwned,
-      condition: existing.condition || "Near Mint (NM)",
-      price: existing.price || "",
-      date: existing.date || (nextOwned ? new Date().toISOString().split("T")[0] : "")
-    };
-
-    saveCollection();
-    updateDetailSubtitle();
-    renderSetCards();
-  }
-
-  // =========================================================================
-  // 7. MODALE MODIFICA CARTA (CONDIZIONE, PREZZO, DATA ACQUISTO)
-  // =========================================================================
-  function openCardModal(cardId) {
-    const card = activeSetCards.find(c => c.id === cardId);
-    if (!card || !activeSet) return;
-
-    editingCard = card;
-    const saved = collection[cardId] || {};
-
-    document.getElementById("modal-title").textContent = `${card.name} (#${card.number})`;
-    document.getElementById("modal-img").src = card.image;
-    document.getElementById("modal-card-sub").textContent = `${activeSet.name} (${activeSet.code})`;
-
-    document.getElementById("modal-owned").checked = !!saved.owned;
-    document.getElementById("modal-condition").value = saved.condition || "Near Mint (NM)";
-    document.getElementById("modal-price").value = saved.price || "";
-    document.getElementById("modal-date").value = saved.date || "";
-
-    document.getElementById("card-modal").classList.add("open");
-  }
-
-  function closeModal() {
-    document.getElementById("card-modal").classList.remove("open");
-    editingCard = null;
-  }
-
-  function saveCardModal() {
-    if (!editingCard || !activeSet) return;
-
-    const isOwned = document.getElementById("modal-owned").checked;
-    const condition = document.getElementById("modal-condition").value;
-    const price = document.getElementById("modal-price").value;
-    const date = document.getElementById("modal-date").value;
-
-    collection[editingCard.id] = {
-      ...(collection[editingCard.id] || {}),
-      cardId: editingCard.id,
-      setId: activeSet.id,
-      number: editingCard.number,
-      name: editingCard.name,
-      owned: isOwned,
-      condition,
-      price,
-      date
-    };
-
-    saveCollection();
-    closeModal();
-    updateDetailSubtitle();
-    renderSetCards();
-  }
-
-  // Aggiunta carta manuale
-  function openManualCardModal() {
-    document.getElementById("man-num").value = "";
-    document.getElementById("man-name").value = "";
-    document.getElementById("man-img").value = "";
-    document.getElementById("manual-modal").classList.add("open");
-  }
-
-  function closeManualModal() {
-    document.getElementById("manual-modal").classList.remove("open");
-  }
-
-  function saveManualCard() {
-    if (!activeSet) return;
-    const num = document.getElementById("man-num").value.trim() || "000";
-    const name = document.getElementById("man-name").value.trim();
-    const img = document.getElementById("man-img").value.trim() || getCardBackUrl();
-    if (!name) return alert("Inserisci il nome della carta.");
-
-    const cardId = `${activeSet.id}-man-${Date.now()}`;
-    const newCard = { id: cardId, number: num, name, image: img };
-
-    activeSetCards.push(newCard);
-    cardsCache[activeSet.id] = activeSetCards;
-    saveCache();
-
-    collection[cardId] = {
-      cardId,
-      setId: activeSet.id,
-      number: num,
-      name,
-      customImage: img,
-      isManual: true,
-      owned: true,
-      condition: "Near Mint (NM)",
-      price: "",
-      date: new Date().toISOString().split("T")[0]
-    };
-
-    saveCollection();
-    closeManualModal();
-    updateDetailSubtitle();
-    renderSetCards();
-  }
-
-  // =========================================================================
-  // 8. ESPORTAZIONE E IMPORTAZIONE BACKUP JSON
-  // =========================================================================
-  function exportData() {
-    const blob = new Blob([JSON.stringify(collection, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `collezione-pokemon-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const imported = JSON.parse(e.target.result);
-        if (typeof imported === "object" && imported !== null) {
-          collection = imported;
-          saveCollection();
-          if (activeSet) {
-            updateDetailSubtitle();
-            renderSetCards();
-          } else {
-            renderSeries();
-          }
-          alert("Collezione importata con successo!");
-        }
-      } catch (err) {
-        alert("File JSON non valido.");
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  // Avvio iniziale
-  renderSeries();
-  updateStats();
-</script>
-</body>
-</html>
+          { id: "jp-cp6", code: "CP6", name: "20th Anniversary", total:
