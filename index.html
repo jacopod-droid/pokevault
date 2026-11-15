@@ -39,6 +39,22 @@
             0% { background-position: -100% -100%; }
             100% { background-position: 100% 100%; }
         }
+        /* Stile Pokellector: carte non possedute desaturate */
+        .card-unowned {
+            filter: grayscale(100%) opacity(0.55);
+            transition: filter 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .card-unowned:hover {
+            filter: grayscale(40%) opacity(0.85);
+            transform: translateY(-3px);
+        }
+        .card-owned {
+            filter: none;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .card-owned:hover {
+            transform: translateY(-3px);
+        }
         /* Scrollbar personalizzata discreta */
         ::-webkit-scrollbar {
             width: 8px;
@@ -59,195 +75,304 @@
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- ================= NAVBAR ================= -->
-    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
             <!-- Logo e Titolo -->
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-b from-pokeRed via-pokeRed to-white border-2 border-slate-800 dark:border-slate-200 flex items-center justify-center relative shadow-md shrink-0">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('sets')">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-b from-pokeRed via-pokeRed to-white border-2 border-slate-800 dark:border-slate-200 flex items-center justify-center relative shadow-md shrink-0">
                     <div class="w-full h-0.5 bg-slate-800 dark:bg-slate-200 absolute"></div>
-                    <div class="w-3.5 h-3.5 rounded-full bg-white border-2 border-slate-800 dark:border-slate-200 z-10"></div>
+                    <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white border-2 border-slate-800 dark:border-slate-200 z-10"></div>
                 </div>
                 <div>
-                    <h1 class="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-pokeRed to-pokeBlue bg-clip-text text-transparent">
+                    <h1 class="text-base sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-pokeRed to-pokeBlue bg-clip-text text-transparent">
                         PokéVault TCG
                     </h1>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Tracker Collezione Carte Pokémon</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Tracker Collezione stile Pokellector</p>
                 </div>
             </div>
 
-            <!-- Azioni Rapide (Backup JSON, Tema, Aggiungi Carta) -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Selettore Viste Principali (Desktop) -->
+            <nav class="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                <button id="navSetsDesktop" onclick="switchView('sets')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-900 text-pokeBlue dark:text-blue-400 shadow-sm">
+                    📚 Esplora Set
+                </button>
+                <button id="navCollectionDesktop" onclick="switchView('collection')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5">
+                    <span>⭐ La Mia Collezione</span>
+                    <span id="navOwnedBadge" class="px-1.5 py-0.5 text-[10px] rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold">0</span>
+                </button>
+            </nav>
+
+            <!-- Azioni Rapide (Backup JSON, Tema, Aggiungi Manuale) -->
+            <div class="flex items-center gap-1.5 sm:gap-2">
                 <!-- Esporta JSON -->
-                <button onclick="exportCollection()" title="Esporta backup JSON" class="p-2.5 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
+                <button onclick="exportCollection()" title="Esporta backup JSON" class="p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
                     <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span class="hidden md:inline">Esporta JSON</span>
+                    <span class="hidden lg:inline">Esporta</span>
                 </button>
 
                 <!-- Importa JSON -->
-                <label title="Importa backup JSON" class="cursor-pointer p-2.5 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
+                <label title="Importa backup JSON" class="cursor-pointer p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
                     <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    <span class="hidden md:inline">Importa JSON</span>
+                    <span class="hidden lg:inline">Importa</span>
                     <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importCollection(event)">
                 </label>
 
                 <!-- Toggle Tema Chiaro/Scuro -->
-                <button onclick="toggleTheme()" id="themeToggleBtn" aria-label="Cambia tema" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
-                    <!-- Icona Sole (visibile in dark mode) -->
+                <button onclick="toggleTheme()" id="themeToggleBtn" aria-label="Cambia tema" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
                     <svg id="sunIcon" class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <!-- Icona Luna (visibile in light mode) -->
                     <svg id="moonIcon" class="w-4 h-4 block dark:hidden text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
 
-                <!-- Bottone Aggiungi Carta -->
-                <button onclick="openCardModal()" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-pokeRed hover:bg-red-600 text-white shadow-md shadow-red-500/20 flex items-center gap-1.5 transition active:scale-95">
+                <!-- Bottone Aggiungi Carta Manuale -->
+                <button onclick="openManualCardModal()" class="px-3 py-2 rounded-xl text-xs font-bold bg-pokeRed hover:bg-red-600 text-white shadow-md shadow-red-500/20 flex items-center gap-1 transition active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    <span>Aggiungi Carta</span>
+                    <span class="hidden sm:inline">Carta Extra</span>
                 </button>
             </div>
+        </div>
+
+        <!-- Barra Navigazione Mobile -->
+        <div class="md:hidden flex border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 px-3 py-1.5 gap-2">
+            <button id="navSetsMobile" onclick="switchView('sets')" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-pokeBlue dark:text-blue-400 shadow-sm">
+                📚 Esplora Set
+            </button>
+            <button id="navCollectionMobile" onclick="switchView('collection')" class="flex-1 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5">
+                <span>⭐ La Mia Collezione</span>
+                <span id="navOwnedBadgeMobile" class="px-1.5 py-0.5 text-[10px] rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold">0</span>
+            </button>
         </div>
     </header>
 
     <!-- ================= CONTENUTO PRINCIPALE ================= -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- DASHBOARD STATISTICHE -->
-        <section aria-label="Statistiche Collezione" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Card 1: Carte Uniche -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Carte Uniche</p>
-                    <p id="statUniqueCards" class="text-2xl sm:text-3xl font-extrabold mt-1 text-slate-900 dark:text-white">0</p>
-                    <p class="text-xs text-slate-400 mt-1">Voci distinte in archivio</p>
-                </div>
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                </div>
-            </div>
+        <!-- ===================================================================== -->
+        <!-- VISTA 1: ESPLORA SET / POKELLECTOR (BLOCCHI -> SET -> GRIGLIA CARTE)  -->
+        <!-- ===================================================================== -->
+        <div id="viewSets" class="space-y-6">
 
-            <!-- Card 2: Quantità Totale -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Totale Carte Possedute</p>
-                    <p id="statTotalQuantity" class="text-2xl sm:text-3xl font-extrabold mt-1 text-slate-900 dark:text-white">0</p>
-                    <p class="text-xs text-slate-400 mt-1">Inclusi i doppioni</p>
+            <!-- Sotto-vista 1A: Elenco Blocchi di Espansione (Series) e Set -->
+            <div id="setsDirectoryView" class="space-y-6">
+                <!-- Intestazione e Filtro Rapido Blocchi -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Espansioni Pokémon TCG</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                            Seleziona un set per visualizzare tutte le carte e spuntare quelle nella tua collezione.
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                        <input type="text" id="setSearchInput" oninput="renderSeriesDirectory()" placeholder="Cerca espansione (es. Base Set, Jungle, 151)..." class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                        <select id="seriesJumpSelect" onchange="jumpToSeries(this.value)" class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                            <option value="">Vai al Blocco...</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
-                </div>
-            </div>
 
-            <!-- Card 3: Valore Stimato -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Valore Stimato</p>
-                    <p id="statTotalValue" class="text-2xl sm:text-3xl font-extrabold mt-1 text-emerald-600 dark:text-emerald-400">€ 0,00</p>
-                    <p class="text-xs text-slate-400 mt-1">Somma valore × quantità</p>
+                <!-- Loader API Sets -->
+                <div id="setsLoader" class="hidden py-12 text-center space-y-3">
+                    <div class="w-10 h-10 border-4 border-pokeBlue border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Caricamento blocchi ed espansioni ufficiali...</p>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-            </div>
 
-            <!-- Card 4: Suddivisione per Rarità -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rarità Principali</p>
-                    <span class="text-[11px] font-medium text-slate-400">Distribuzione</span>
-                </div>
-                <div id="rarityBreakdownContainer" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                <!-- Contenitore Blocchi di Espansione -->
+                <div id="seriesContainer" class="space-y-8">
                     <!-- Popolato dinamicamente via JS -->
                 </div>
             </div>
-        </section>
 
-        <!-- BARRA RICERCA, FILTRI E ORDINAMENTO -->
-        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-                <!-- Ricerca istantanea -->
-                <div class="md:col-span-4 relative">
+            <!-- Sotto-vista 1B: Dettaglio Singolo Set con Griglia Carte stile Pokellector -->
+            <div id="setDetailView" class="hidden space-y-5">
+                <!-- Barra Navigazione Set -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <button onclick="closeSetDetail()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-2 shadow-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                        <span>Torna ai Blocchi Espansione</span>
+                    </button>
+
+                    <!-- Filtro rapido dentro il Set -->
+                    <div class="flex items-center gap-2">
+                        <button id="setFilterAllBtn" onclick="setDetailFilterMode('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-pokeBlue text-white shadow-sm transition">Tutte</button>
+                        <button id="setFilterOwnedBtn" onclick="setDetailFilterMode('owned')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 transition">Possedute</button>
+                        <button id="setFilterMissingBtn" onclick="setDetailFilterMode('missing')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 transition">Mancanti</button>
+                    </div>
+                </div>
+
+                <!-- Intestazione Set Selezionato -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 p-2.5 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                            <img id="detailSetSymbol" src="" alt="Simbolo Set" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <div>
+                            <span id="detailSetSeries" class="text-[11px] font-bold uppercase tracking-wider text-pokeBlue dark:text-blue-400">Blocco Espansione</span>
+                            <h2 id="detailSetName" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">Nome Set</h2>
+                            <p id="detailSetMeta" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Anno di uscita • Totale carte</p>
+                        </div>
+                    </div>
+
+                    <!-- Avanzamento Set -->
+                    <div class="w-full md:w-72 bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2">
+                        <div class="flex items-center justify-between text-xs font-bold">
+                            <span class="text-slate-600 dark:text-slate-300">Completamento Set</span>
+                            <span id="detailSetProgressText" class="text-emerald-600 dark:text-emerald-400 font-extrabold">0 / 0 (0%)</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div id="detailSetProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                            <span>Valore nel set:</span>
+                            <span id="detailSetTotalValue" class="font-bold text-slate-800 dark:text-slate-200">€ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ricerca dentro il Set -->
+                <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <input type="text" id="searchInput" oninput="renderCollection()" placeholder="Cerca Pokémon, set o numero (es. 199/165)..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue transition">
+                    <input type="text" id="setCardSearchInput" oninput="renderSetCardsGrid()" placeholder="Filtra carte in questo set per nome o numero (es. Charizard, 4/102)..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue shadow-sm">
                 </div>
 
-                <!-- Filtro Rarità -->
-                <div class="md:col-span-2">
-                    <select id="filterRarity" onchange="renderCollection()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                        <option value="">Tutte le Rarità</option>
-                        <option value="Comune">Comune</option>
-                        <option value="Non Comune">Non Comune</option>
-                        <option value="Rara">Rara</option>
-                        <option value="Holo Rara">Holo Rara</option>
-                        <option value="Ultra Rara / ex / V">Ultra Rara / ex / V</option>
-                        <option value="Illustration Rare / SIR">Illustration Rare / SIR</option>
-                        <option value="Hyper Rara / Gold">Hyper Rara / Gold</option>
-                        <option value="Promo">Promo</option>
-                    </select>
+                <!-- Loader Carte del Set -->
+                <div id="setCardsLoader" class="hidden py-16 text-center space-y-3">
+                    <div class="w-10 h-10 border-4 border-pokeRed border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Scaricamento lista carte del set...</p>
                 </div>
 
-                <!-- Filtro Condizione -->
-                <div class="md:col-span-2">
-                    <select id="filterCondition" onchange="renderCollection()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                        <option value="">Tutte le Condizioni</option>
-                        <option value="Mint">Mint (M)</option>
-                        <option value="Near Mint">Near Mint (NM)</option>
-                        <option value="Excellent">Excellent (EX)</option>
-                        <option value="Good">Good (GD)</option>
-                        <option value="Played">Played (PL)</option>
-                    </select>
-                </div>
-
-                <!-- Filtro Lingua -->
-                <div class="md:col-span-2">
-                    <select id="filterLanguage" onchange="renderCollection()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                        <option value="">Tutte le Lingue</option>
-                        <option value="Italiano">🇮🇹 Italiano</option>
-                        <option value="Inglese">🇬🇧 Inglese</option>
-                        <option value="Giapponese">🇯🇵 Giapponese</option>
-                        <option value="Altro">🌍 Altro</option>
-                    </select>
-                </div>
-
-                <!-- Ordinamento -->
-                <div class="md:col-span-2">
-                    <select id="sortSelect" onchange="renderCollection()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                        <option value="newest">Più recenti</option>
-                        <option value="valueDesc">Valore: alto → basso</option>
-                        <option value="valueAsc">Valore: basso → alto</option>
-                        <option value="nameAsc">Nome: A → Z</option>
-                        <option value="qtyDesc">Quantità: maggiore</option>
-                    </select>
+                <!-- Griglia Visuale Carte del Set (Stile Pokellector) -->
+                <div id="setCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
+                    <!-- Carte del set renderizzate qui -->
                 </div>
             </div>
+        </div>
 
-            <!-- Barra info filtri attivi e reset -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-slate-500 dark:text-slate-400">
-                <span id="resultsCountText">Visualizzazione di 0 carte</span>
-                <button id="resetFiltersBtn" onclick="resetFilters()" class="hidden text-pokeRed hover:underline font-semibold">
-                    Azzera filtri
-                </button>
-            </div>
-        </section>
+        <!-- ===================================================================== -->
+        <!-- VISTA 2: LA MIA COLLEZIONE (RIEPILOGO CARTE POSSEDUTE & STATISTICHE)  -->
+        <!-- ===================================================================== -->
+        <div id="viewCollection" class="hidden space-y-6">
+            <!-- DASHBOARD STATISTICHE -->
+            <section aria-label="Statistiche Collezione" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: Carte Uniche -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Carte in Collezione</p>
+                        <p id="statUniqueCards" class="text-2xl sm:text-3xl font-extrabold mt-1 text-slate-900 dark:text-white">0</p>
+                        <p class="text-xs text-slate-400 mt-1">Carte uniche flaggate</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                </div>
 
-        <!-- GRIGLIA DELLE CARTE -->
-        <section aria-label="Elenco Carte" id="cardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            <!-- Le card verranno generate qui dinamicamente -->
-        </section>
+                <!-- Card 2: Set Iniziati -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Set Iniziati</p>
+                        <p id="statSetsCount" class="text-2xl sm:text-3xl font-extrabold mt-1 text-slate-900 dark:text-white">0</p>
+                        <p class="text-xs text-slate-400 mt-1">Espansioni con almeno 1 carta</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                    </div>
+                </div>
 
-        <!-- STATO VUOTO (Nessuna carta trovata o collezione vuota) -->
-        <div id="emptyState" class="hidden bg-white dark:bg-slate-900 rounded-2xl p-12 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-4">
-            <div class="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl">
-                🃏
-            </div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Nessuna carta trovata</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                Non ci sono carte che corrispondono ai criteri di ricerca attuali oppure la tua collezione è ancora vuota.
-            </p>
-            <div class="pt-2">
-                <button onclick="openCardModal()" class="px-4 py-2.5 rounded-xl text-sm font-bold bg-pokeRed hover:bg-red-600 text-white shadow transition">
-                    + Aggiungi la tua prima carta
-                </button>
+                <!-- Card 3: Valore Stimato -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Valore / Spesa Totale</p>
+                        <p id="statTotalValue" class="text-2xl sm:text-3xl font-extrabold mt-1 text-emerald-600 dark:text-emerald-400">€ 0,00</p>
+                        <p class="text-xs text-slate-400 mt-1">Somma prezzi registrati</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
+
+                <!-- Card 4: Condizioni Principali -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Condizioni</p>
+                        <span class="text-[11px] font-medium text-slate-400">Riepilogo</span>
+                    </div>
+                    <div id="conditionBreakdownContainer" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                        <!-- Popolato dinamicamente via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- BARRA RICERCA E FILTRI COLLEZIONE -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <!-- Ricerca -->
+                    <div class="md:col-span-4 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" id="searchInput" oninput="renderOwnedCollection()" placeholder="Cerca Pokémon, set o numero..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue transition">
+                    </div>
+
+                    <!-- Filtro Set -->
+                    <div class="md:col-span-3">
+                        <select id="filterOwnedSet" onchange="renderOwnedCollection()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                            <option value="">Tutti i Set</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro Condizione -->
+                    <div class="md:col-span-3">
+                        <select id="filterCondition" onchange="renderOwnedCollection()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                            <option value="">Tutte le Condizioni</option>
+                            <option value="Mint">Mint (M)</option>
+                            <option value="Near Mint">Near Mint (NM)</option>
+                            <option value="Excellent">Excellent (EX)</option>
+                            <option value="Good">Good (GD)</option>
+                            <option value="Light Played">Light Played (LP)</option>
+                            <option value="Played">Played (PL)</option>
+                            <option value="Poor">Poor (PO)</option>
+                        </select>
+                    </div>
+
+                    <!-- Ordinamento -->
+                    <div class="md:col-span-2">
+                        <select id="sortSelect" onchange="renderOwnedCollection()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                            <option value="newest">Aggiunte di recente</option>
+                            <option value="purchaseDateDesc">Data acquisto: recente</option>
+                            <option value="valueDesc">Prezzo: alto → basso</option>
+                            <option value="valueAsc">Prezzo: basso → alto</option>
+                            <option value="nameAsc">Nome: A → Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-slate-500 dark:text-slate-400">
+                    <span id="resultsCountText">Visualizzazione di 0 carte</span>
+                    <button id="resetFiltersBtn" onclick="resetFilters()" class="hidden text-pokeRed hover:underline font-semibold">
+                        Azzera filtri
+                    </button>
+                </div>
+            </section>
+
+            <!-- GRIGLIA CARTE POSSEDUTE -->
+            <section aria-label="Elenco Carte Possedute" id="cardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <!-- Popolato dinamicamente -->
+            </section>
+
+            <!-- STATO VUOTO -->
+            <div id="emptyState" class="hidden bg-white dark:bg-slate-900 rounded-2xl p-12 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-4">
+                <div class="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl">
+                    🃏
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Nessuna carta trovata</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                    Esplora i blocchi di espansione e clicca sulle carte che possiedi per flaggarle nella tua collezione!
+                </p>
+                <div class="pt-2">
+                    <button onclick="switchView('sets')" class="px-4 py-2.5 rounded-xl text-sm font-bold bg-pokeBlue hover:bg-blue-700 text-white shadow transition">
+                        📚 Vai ai Set di Espansione
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -255,163 +380,168 @@
 
     <!-- ================= FOOTER ================= -->
     <footer class="border-t border-slate-200 dark:border-slate-800 py-5 px-4 text-center text-xs text-slate-500 dark:text-slate-400 mt-8">
-        <p>PokéVault TCG • Salvataggio automatico nel browser (LocalStorage). Ricorda di usare <strong>Esporta JSON</strong> per salvare backup sicuri su GitHub o sul tuo dispositivo.</p>
+        <p>PokéVault TCG • Salvataggio automatico nel browser (LocalStorage). Usa <strong>Esporta</strong> per salvare backup JSON su GitHub o sul tuo dispositivo.</p>
     </footer>
 
-    <!-- ================= MODALE AGGIUNGI / MODIFICA CARTA ================= -->
-    <div id="cardModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto transform transition-all">
+    <!-- ================= MODALE DETTAGLIO & MODIFICA CARTA (POKELLECTOR STYLE) ================= -->
+    <div id="cardDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto transform transition-all">
             <!-- Header Modale -->
-            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-                <h2 id="modalTitle" class="text-lg font-extrabold text-slate-900 dark:text-white">Aggiungi Nuova Carta</h2>
-                <button onclick="closeCardModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
+                <div class="flex items-center gap-2.5">
+                    <span id="modalCardNumberBadge" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 font-mono text-xs font-extrabold text-slate-800 dark:text-slate-200">#001</span>
+                    <h2 id="modalCardTitle" class="text-lg font-extrabold text-slate-900 dark:text-white">Dettaglio Carta</h2>
+                </div>
+                <button onclick="closeCardDetailModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
-            <!-- Form Carta -->
-            <form id="cardForm" onsubmit="saveCard(event)" class="p-6 space-y-4">
-                <input type="hidden" id="cardId">
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- 1. Nome Pokémon / Carta -->
-                    <div class="sm:col-span-2">
-                        <label for="cardName" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Nome Pokémon / Carta *
-                        </label>
-                        <input type="text" id="cardName" required placeholder="es. Charizard ex" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+            <!-- Corpo Modale: Immagine a sinistra + Form Dati a destra -->
+            <div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                <!-- Colonna Immagine -->
+                <div class="md:col-span-5 flex flex-col items-center">
+                    <div class="relative w-56 sm:w-64 rounded-2xl overflow-hidden shadow-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <img id="modalCardImage" src="" alt="Carta Pokémon" class="w-full h-auto object-contain transition-all duration-300">
                     </div>
-
-                    <!-- 2. Espansione / Set -->
-                    <div>
-                        <label for="cardSet" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Espansione / Set *
-                        </label>
-                        <input type="text" id="cardSet" required placeholder="es. Scarlatto e Violetto - 151" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                    </div>
-
-                    <!-- 3. Numero Carta -->
-                    <div>
-                        <label for="cardNumber" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Numero Carta *
-                        </label>
-                        <input type="text" id="cardNumber" required placeholder="es. 199/165" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                    </div>
-
-                    <!-- 4. Rarità -->
-                    <div>
-                        <label for="cardRarity" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Rarità
-                        </label>
-                        <select id="cardRarity" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                            <option value="Comune">Comune</option>
-                            <option value="Non Comune">Non Comune</option>
-                            <option value="Rara">Rara</option>
-                            <option value="Holo Rara">Holo Rara</option>
-                            <option value="Ultra Rara / ex / V">Ultra Rara / ex / V</option>
-                            <option value="Illustration Rare / SIR">Illustration Rare / SIR</option>
-                            <option value="Hyper Rara / Gold">Hyper Rara / Gold</option>
-                            <option value="Promo">Promo</option>
-                        </select>
-                    </div>
-
-                    <!-- 5. Variante -->
-                    <div>
-                        <label for="cardVariant" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Variante
-                        </label>
-                        <select id="cardVariant" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                            <option value="Normale">Normale</option>
-                            <option value="Reverse Holo">Reverse Holo</option>
-                            <option value="Holo">Holo</option>
-                            <option value="1a Edizione">1a Edizione</option>
-                        </select>
-                    </div>
-
-                    <!-- 6. Lingua -->
-                    <div>
-                        <label for="cardLanguage" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Lingua
-                        </label>
-                        <select id="cardLanguage" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                            <option value="Italiano">Italiano</option>
-                            <option value="Inglese">Inglese</option>
-                            <option value="Giapponese">Giapponese</option>
-                            <option value="Altro">Altro</option>
-                        </select>
-                    </div>
-
-                    <!-- 7. Condizione -->
-                    <div>
-                        <label for="cardCondition" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Condizione
-                        </label>
-                        <select id="cardCondition" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                            <option value="Mint">Mint (M)</option>
-                            <option value="Near Mint" selected>Near Mint (NM)</option>
-                            <option value="Excellent">Excellent (EX)</option>
-                            <option value="Good">Good (GD)</option>
-                            <option value="Played">Played (PL)</option>
-                        </select>
-                    </div>
-
-                    <!-- 8. Quantità -->
-                    <div>
-                        <label for="cardQuantity" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Quantità *
-                        </label>
-                        <input type="number" id="cardQuantity" min="1" value="1" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                    </div>
-
-                    <!-- 9. Valore stimato unitario (€) -->
-                    <div>
-                        <label for="cardValue" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            Valore Unitario (€)
-                        </label>
-                        <input type="number" id="cardValue" min="0" step="0.01" value="0.00" placeholder="0.00" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                    </div>
-
-                    <!-- 10. URL Immagine opzionale -->
-                    <div class="sm:col-span-2">
-                        <label for="cardImage" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-                            URL Immagine Carta (Opzionale)
-                        </label>
-                        <input type="url" id="cardImage" placeholder="https://images.pokemontcg.io/..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
-                        <p class="text-[11px] text-slate-400 mt-1">Lascia vuoto per mostrare un'anteprima stilizzata a carta Pokémon.</p>
+                    <div class="mt-3 text-center space-y-1">
+                        <p id="modalCardSetInfo" class="text-xs font-bold text-slate-600 dark:text-slate-300">Set Espansione</p>
+                        <p id="modalCardRarityInfo" class="text-[11px] text-slate-400">Rarità • Artista</p>
                     </div>
                 </div>
 
-                <!-- Pulsanti Form -->
-                <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
-                    <button type="button" onclick="closeCardModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                        Annulla
-                    </button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-pokeRed hover:bg-red-600 text-white shadow-md shadow-red-500/20 transition">
-                        Salva Carta
-                    </button>
-                </div>
-            </form>
+                <!-- Colonna Form Gestione Collezione -->
+                <form id="detailCardForm" onsubmit="saveCardDetail(event)" class="md:col-span-7 space-y-4">
+                    <input type="hidden" id="detailCardId">
+
+                    <!-- Toggle Posseduta / Flaggata -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <div>
+                            <span class="text-sm font-extrabold text-slate-900 dark:text-white block">Nella mia collezione</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Attiva per mostrare la carta a colori nel set</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="detailOwnedToggle" class="sr-only peer" onchange="updateModalImageGrayscale()">
+                            <div class="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Campi Modificabili: Condizione, Prezzo, Data di Acquisto -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <!-- Condizione -->
+                        <div>
+                            <label for="detailCondition" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                                Condizione
+                            </label>
+                            <select id="detailCondition" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                                <option value="Mint">Mint (M)</option>
+                                <option value="Near Mint">Near Mint (NM)</option>
+                                <option value="Excellent">Excellent (EX)</option>
+                                <option value="Good">Good (GD)</option>
+                                <option value="Light Played">Light Played (LP)</option>
+                                <option value="Played">Played (PL)</option>
+                                <option value="Poor">Poor (PO)</option>
+                            </select>
+                        </div>
+
+                        <!-- Prezzo (€) -->
+                        <div>
+                            <label for="detailPrice" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                                Prezzo (€)
+                            </label>
+                            <input type="number" id="detailPrice" min="0" step="0.01" placeholder="0.00" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                        </div>
+
+                        <!-- Data di acquisto -->
+                        <div>
+                            <label for="detailPurchaseDate" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                                Data di acquisto
+                            </label>
+                            <input type="date" id="detailPurchaseDate" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                        </div>
+
+                        <!-- Variante / Note brevi -->
+                        <div>
+                            <label for="detailVariant" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                                Variante / Edizione
+                            </label>
+                            <select id="detailVariant" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pokeBlue">
+                                <option value="Normale">Normale</option>
+                                <option value="Holo">Holo</option>
+                                <option value="Reverse Holo">Reverse Holo</option>
+                                <option value="1a Edizione">1a Edizione</option>
+                                <option value="Gradazione PSA/BGS">Gradazione PSA/BGS</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Pulsanti Salvataggio -->
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                        <button type="button" onclick="closeCardDetailModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            Chiudi
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/20 transition">
+                            Salva Modifiche
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- ================= MODALE CONFERMA ELIMINAZIONE ================= -->
-    <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center space-y-4">
-            <div class="w-12 h-12 mx-auto rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Eliminare questa carta?</h3>
-            <p id="deleteCardNameText" class="text-sm text-slate-500 dark:text-slate-400">
-                Questa azione rimuoverà definitivamente la carta dalla tua collezione.
-            </p>
-            <div class="flex items-center justify-center gap-3 pt-2">
-                <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-                    Annulla
-                </button>
-                <button id="confirmDeleteBtn" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-700 text-white transition">
-                    Elimina
+    <!-- ================= MODALE AGGIUNGI CARTA EXTRA MANUALE ================= -->
+    <div id="manualCardModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Aggiungi Carta Personalizzata</h2>
+                <button onclick="closeManualCardModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
+            <form id="manualCardForm" onsubmit="saveManualCard(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">Nome Pokémon *</label>
+                        <input type="text" id="manName" required placeholder="es. Pikachu Promo" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">Set / Espansione *</label>
+                        <input type="text" id="manSet" required placeholder="es. Wizards Black Star Promos" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">Numero Carta *</label>
+                        <input type="text" id="manNumber" required placeholder="es. 27" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">Condizione</label>
+                        <select id="manCondition" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                            <option value="Mint">Mint</option>
+                            <option value="Near Mint" selected>Near Mint</option>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good">Good</option>
+                            <option value="Light Played">Light Played</option>
+                            <option value="Played">Played</option>
+                            <option value="Poor">Poor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">Prezzo (€)</label>
+                        <input type="number" id="manPrice" min="0" step="0.01" value="0.00" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">Data di acquisto</label>
+                        <input type="date" id="manPurchaseDate" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">URL Immagine</label>
+                        <input type="url" id="manImage" placeholder="https://..." class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeManualCardModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300">Annulla</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-pokeRed text-white">Aggiungi</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -420,102 +550,83 @@
 
     <!-- ================= LOGICA JAVASCRIPT ================= -->
     <script>
-        // Chiave per il salvataggio in LocalStorage
-        const STORAGE_KEY = 'pokevault_tcg_collection_v1';
+        // Chiavi LocalStorage
+        const STORAGE_KEY = 'pokevault_pokellector_collection_v2';
+        const SETS_CACHE_KEY = 'pokevault_sets_cache_v1';
+        const CARDS_CACHE_PREFIX = 'pokevault_set_cards_';
         const THEME_KEY = 'pokevault_tcg_theme';
+        const API_BASE = 'https://api.pokemontcg.io/v2';
 
-        // Stato globale della collezione
-        let collection = [];
-        let cardToDeleteId = null;
+        // Stato Applicazione
+        // Mappa delle carte possedute indicizzata per card.id:
+        // { id, name, number, setId, setName, series, rarity, image, condition, price, purchaseDate, variant, updatedAt }
+        let ownedCardsMap = {};
+        let allSets = [];
+        let currentSet = null;
+        let currentSetCards = [];
+        let currentModalCardObj = null;
+        let setDetailFilter = 'all'; // 'all' | 'owned' | 'missing'
 
-        // Dati di esempio precaricati al primo avvio
-        const SAMPLE_CARDS = [
-            {
-                id: 'sample-1',
-                name: 'Charizard ex',
-                set: 'Scarlatto e Violetto - 151',
-                number: '199/165',
-                rarity: 'Illustration Rare / SIR',
-                variant: 'Holo',
-                language: 'Italiano',
-                condition: 'Near Mint',
-                quantity: 1,
-                value: 145.00,
-                image: 'https://images.pokemontcg.io/sv3pt5/199_hires.png',
-                createdAt: Date.now() - 10000
-            },
-            {
-                id: 'sample-2',
-                name: 'Pikachu',
-                set: 'Scarlatto e Violetto - 151',
-                number: '173/165',
-                rarity: 'Illustration Rare / SIR',
-                variant: 'Holo',
-                language: 'Italiano',
-                condition: 'Mint',
-                quantity: 2,
-                value: 24.50,
-                image: 'https://images.pokemontcg.io/sv3pt5/173_hires.png',
-                createdAt: Date.now() - 20000
-            },
-            {
-                id: 'sample-3',
-                name: 'Mewtwo',
-                set: 'Set Base',
-                number: '10/102',
-                rarity: 'Holo Rara',
-                variant: 'Holo',
-                language: 'Italiano',
-                condition: 'Excellent',
-                quantity: 1,
-                value: 38.00,
-                image: 'https://images.pokemontcg.io/base1/10_hires.png',
-                createdAt: Date.now() - 30000
-            },
-            {
-                id: 'sample-4',
-                name: 'Mew ex',
-                set: 'Destini di Paldea',
-                number: '232/091',
-                rarity: 'Illustration Rare / SIR',
-                variant: 'Holo',
-                language: 'Giapponese',
-                condition: 'Mint',
-                quantity: 1,
-                value: 95.00,
-                image: 'https://images.pokemontcg.io/sv4pt5/232_hires.png',
-                createdAt: Date.now() - 40000
-            }
+        // Ordine cronologico dei Blocchi di Espansione (Series) come su Pokellector
+        const SERIES_ORDER = [
+            'Base',
+            'Gym',
+            'Neo',
+            'Other',
+            'E-Card',
+            'EX',
+            'NP',
+            'Diamond & Pearl',
+            'Platinum',
+            'HeartGold & SoulSilver',
+            'Call of Legends',
+            'Black & White',
+            'XY',
+            'Sun & Moon',
+            'Sword & Shield',
+            'Scarlet & Violet'
         ];
 
-        // Mappa stili badge per ogni rarità
-        const RARITY_STYLES = {
-            'Comune': 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-            'Non Comune': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
-            'Rara': 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
-            'Holo Rara': 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800',
-            'Ultra Rara / ex / V': 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800',
-            'Illustration Rare / SIR': 'bg-gradient-to-r from-pink-500/15 to-amber-500/15 text-pink-700 dark:text-pink-300 border-pink-300 dark:border-pink-700',
-            'Hyper Rara / Gold': 'bg-amber-100 text-amber-800 border-amber-400 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-600',
-            'Promo': 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800'
+        // Nomi leggibili per i Blocchi stile Pokellector
+        const SERIES_LABELS = {
+            'Base': 'Base Set Series (WOTC)',
+            'Gym': 'Gym Series',
+            'Neo': 'Neo Series',
+            'E-Card': 'e-Card Series',
+            'EX': 'EX Series',
+            'Diamond & Pearl': 'Diamond & Pearl Series',
+            'Platinum': 'Platinum Series',
+            'HeartGold & SoulSilver': 'HeartGold & SoulSilver Series',
+            'Call of Legends': 'Call of Legends Series',
+            'Black & White': 'Black & White Series',
+            'XY': 'XY Series',
+            'Sun & Moon': 'Sun & Moon Series',
+            'Sword & Shield': 'Sword & Shield Series',
+            'Scarlet & Violet': 'Scarlet & Violet Series',
+            'Other': 'Promos & Special Sets',
+            'NP': 'Nintendo Black Star Promos'
         };
 
-        // Mappa bandierine lingua
-        const LANG_FLAGS = {
-            'Italiano': '🇮🇹',
-            'Inglese': '🇬🇧',
-            'Giapponese': '🇯🇵',
-            'Altro': '🌍'
-        };
+        // Fallback set essenziali nel caso l'API sia momentaneamente irraggiungibile
+        const FALLBACK_SETS = [
+            { id: 'base1', name: 'Base Set', series: 'Base', printedTotal: 102, total: 102, releaseDate: '1999/01/09', images: { symbol: 'https://images.pokemontcg.io/base1/symbol.png', logo: 'https://images.pokemontcg.io/base1/logo.png' } },
+            { id: 'base2', name: 'Jungle', series: 'Base', printedTotal: 64, total: 64, releaseDate: '1999/06/16', images: { symbol: 'https://images.pokemontcg.io/base2/symbol.png', logo: 'https://images.pokemontcg.io/base2/logo.png' } },
+            { id: 'base3', name: 'Fossil', series: 'Base', printedTotal: 62, total: 62, releaseDate: '1999/10/10', images: { symbol: 'https://images.pokemontcg.io/base3/symbol.png', logo: 'https://images.pokemontcg.io/base3/logo.png' } },
+            { id: 'base4', name: 'Base Set 2', series: 'Base', printedTotal: 130, total: 130, releaseDate: '2000/02/24', images: { symbol: 'https://images.pokemontcg.io/base4/symbol.png', logo: 'https://images.pokemontcg.io/base4/logo.png' } },
+            { id: 'base5', name: 'Team Rocket', series: 'Base', printedTotal: 82, total: 83, releaseDate: '2000/04/24', images: { symbol: 'https://images.pokemontcg.io/base5/symbol.png', logo: 'https://images.pokemontcg.io/base5/logo.png' } },
+            { id: 'basep', name: 'Wizards Black Star Promos', series: 'Base', printedTotal: 53, total: 53, releaseDate: '1999/07/01', images: { symbol: 'https://images.pokemontcg.io/basep/symbol.png', logo: 'https://images.pokemontcg.io/basep/logo.png' } },
+            { id: 'sv3pt5', name: '151', series: 'Scarlet & Violet', printedTotal: 165, total: 207, releaseDate: '2023/09/22', images: { symbol: 'https://images.pokemontcg.io/sv3pt5/symbol.png', logo: 'https://images.pokemontcg.io/sv3pt5/logo.png' } }
+        ];
 
         // ================= INIZIALIZZAZIONE =================
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
-            loadCollection();
-            renderAll();
+            loadCollectionFromStorage();
+            updateGlobalBadges();
+            await loadAllSets();
+            renderSeriesDirectory();
         });
 
-        // Gestione Tema Chiaro/Scuro
         function initTheme() {
             const savedTheme = localStorage.getItem(THEME_KEY);
             if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -530,113 +641,738 @@
             localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
         }
 
-        // Caricamento dati da LocalStorage
-        function loadCollection() {
+        // ================= GESTIONE STORAGE & MIGRAZIONE =================
+        function loadCollectionFromStorage() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw === null) {
-                    // Primo avvio assoluto: carica le carte di esempio
-                    collection = [...SAMPLE_CARDS];
-                    saveToStorage();
+                if (raw) {
+                    ownedCardsMap = JSON.parse(raw) || {};
                 } else {
-                    collection = JSON.parse(raw) || [];
+                    // Controlla se ci sono vecchi dati dalla versione v1 per migrarli
+                    const oldRaw = localStorage.getItem('pokevault_tcg_collection_v1');
+                    if (oldRaw) {
+                        const oldList = JSON.parse(oldRaw);
+                        if (Array.isArray(oldList)) {
+                            oldList.forEach(item => {
+                                const cid = item.id || 'legacy-' + Math.random().toString(36).slice(2, 8);
+                                ownedCardsMap[cid] = {
+                                    id: cid,
+                                    name: item.name,
+                                    number: item.number || 'N/D',
+                                    setId: 'custom',
+                                    setName: item.set || 'Collezione Precedente',
+                                    series: 'Other',
+                                    rarity: item.rarity || 'Rara',
+                                    image: item.image || '',
+                                    condition: item.condition || 'Near Mint',
+                                    price: Number(item.value) || 0,
+                                    purchaseDate: new Date().toISOString().split('T')[0],
+                                    variant: item.variant || 'Normale',
+                                    updatedAt: item.createdAt || Date.now()
+                                };
+                            });
+                            saveCollectionToStorage();
+                        }
+                    }
                 }
             } catch (e) {
-                console.error('Errore nel caricamento da localStorage:', e);
-                collection = [];
+                console.error('Errore lettura localStorage:', e);
+                ownedCardsMap = {};
             }
         }
 
-        function saveToStorage() {
+        function saveCollectionToStorage() {
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(ownedCardsMap));
+                updateGlobalBadges();
             } catch (e) {
-                showToast('Errore nel salvataggio locale. Spazio esaurito?', 'error');
+                showToast('Errore di salvataggio nel browser.', 'error');
             }
         }
 
-        // Aggiorna dashboard e griglia
-        function renderAll() {
-            updateDashboard();
-            renderCollection();
+        function updateGlobalBadges() {
+            const count = Object.keys(ownedCardsMap).length;
+            document.getElementById('navOwnedBadge').textContent = count;
+            document.getElementById('navOwnedBadgeMobile').textContent = count;
         }
 
-        // ================= DASHBOARD STATISTICHE =================
-        function updateDashboard() {
-            const uniqueCount = collection.length;
-            let totalQty = 0;
-            let totalVal = 0;
-            const rarityCounts = {};
+        // ================= NAVIGAZIONE TRA LE VISTE =================
+        function switchView(viewName) {
+            const viewSets = document.getElementById('viewSets');
+            const viewCollection = document.getElementById('viewCollection');
 
-            collection.forEach(card => {
-                const qty = Number(card.quantity) || 0;
-                const val = Number(card.value) || 0;
-                totalQty += qty;
-                totalVal += (qty * val);
+            // Stili pulsanti desktop & mobile
+            const activeDesk = 'px-4 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-900 text-pokeBlue dark:text-blue-400 shadow-sm flex items-center gap-1.5';
+            const inactiveDesk = 'px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5';
+            const activeMob = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-pokeBlue dark:text-blue-400 shadow-sm flex items-center justify-center gap-1.5';
+            const inactiveMob = 'flex-1 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5';
 
-                rarityCounts[card.rarity] = (rarityCounts[card.rarity] || 0) + qty;
+            if (viewName === 'sets') {
+                viewSets.classList.remove('hidden');
+                viewCollection.classList.add('hidden');
+                document.getElementById('navSetsDesktop').className = activeDesk;
+                document.getElementById('navCollectionDesktop').className = inactiveDesk;
+                document.getElementById('navSetsMobile').className = activeMob;
+                document.getElementById('navCollectionMobile').className = inactiveMob;
+
+                if (currentSet) {
+                    updateSetDetailHeaderStats();
+                    renderSetCardsGrid();
+                } else {
+                    renderSeriesDirectory();
+                }
+            } else {
+                viewSets.classList.add('hidden');
+                viewCollection.classList.remove('hidden');
+                document.getElementById('navSetsDesktop').className = inactiveDesk;
+                document.getElementById('navCollectionDesktop').className = activeDesk;
+                document.getElementById('navSetsMobile').className = inactiveMob;
+                document.getElementById('navCollectionMobile').className = activeMob;
+
+                populateOwnedSetFilter();
+                renderOwnedCollection();
+            }
+        }
+
+        // ================= CARICAMENTO BLOCCHI E SET (API + CACHE) =================
+        async function loadAllSets() {
+            const loader = document.getElementById('setsLoader');
+            loader.classList.remove('hidden');
+
+            try {
+                // Controlla cache locale valida per 7 giorni
+                const cached = localStorage.getItem(SETS_CACHE_KEY);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (parsed && Array.isArray(parsed.data) && (Date.now() - parsed.timestamp < 7 * 86400000)) {
+                        allSets = parsed.data;
+                        loader.classList.add('hidden');
+                        return;
+                    }
+                }
+
+                const res = await fetch(`${API_BASE}/sets?orderBy=releaseDate`);
+                if (!res.ok) throw new Error('Errore API Sets');
+                const json = await res.json();
+                allSets = json.data || FALLBACK_SETS;
+
+                localStorage.setItem(SETS_CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    data: allSets
+                }));
+            } catch (err) {
+                console.warn('Uso set di fallback offline:', err);
+                allSets = FALLBACK_SETS;
+                showToast('Modalità offline/cache attiva per i set.', 'info');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // Renderizza tutti i Blocchi di Espansione e i rispettivi Set con simboli
+        function renderSeriesDirectory() {
+            const container = document.getElementById('seriesContainer');
+            const jumpSelect = document.getElementById('seriesJumpSelect');
+            const searchQuery = document.getElementById('setSearchInput').value.trim().toLowerCase();
+
+            // Raggruppa set per series
+            const grouped = {};
+            allSets.forEach(set => {
+                if (searchQuery && !set.name.toLowerCase().includes(searchQuery) && !set.series.toLowerCase().includes(searchQuery)) {
+                    return;
+                }
+                const sKey = set.series || 'Other';
+                if (!grouped[sKey]) grouped[sKey] = [];
+                grouped[sKey].push(set);
             });
 
-            document.getElementById('statUniqueCards').textContent = uniqueCount;
-            document.getElementById('statTotalQuantity').textContent = totalQty;
-            document.getElementById('statTotalValue').textContent = formatCurrency(totalVal);
+            // Ordina le chiavi dei blocchi secondo SERIES_ORDER (dal Base Set fino alle moderne)
+            const sortedSeriesKeys = Object.keys(grouped).sort((a, b) => {
+                const idxA = SERIES_ORDER.indexOf(a);
+                const idxB = SERIES_ORDER.indexOf(b);
+                if (idxA === -1 && idxB === -1) return a.localeCompare(b);
+                if (idxA === -1) return 1;
+                if (idxB === -1) return -1;
+                return idxA - idxB;
+            });
 
-            // Render suddivisione per rarità
-            const rarityContainer = document.getElementById('rarityBreakdownContainer');
-            rarityContainer.innerHTML = '';
+            // Aggiorna select "Vai al Blocco..."
+            const prevSelectVal = jumpSelect.value;
+            jumpSelect.innerHTML = '<option value="">Vai al Blocco...</option>';
+            sortedSeriesKeys.forEach(sKey => {
+                const opt = document.createElement('option');
+                opt.value = 'series-block-' + sKey.replace(/\s+/g, '-');
+                opt.textContent = SERIES_LABELS[sKey] || `${sKey} Series`;
+                jumpSelect.appendChild(opt);
+            });
+            jumpSelect.value = prevSelectVal;
 
-            const sortedRarities = Object.entries(rarityCounts).sort((a, b) => b[1] - a[1]);
-            if (sortedRarities.length === 0) {
-                rarityContainer.innerHTML = '<span class="text-xs text-slate-400">Nessun dato</span>';
+            container.innerHTML = '';
+
+            if (sortedSeriesKeys.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-10 text-center border border-slate-200 dark:border-slate-800">
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Nessun set trovato per "${escapeHTML(searchQuery)}".</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calcola carte possedute per ogni setId
+            const ownedCountBySet = {};
+            Object.values(ownedCardsMap).forEach(card => {
+                if (card.setId) {
+                    ownedCountBySet[card.setId] = (ownedCountBySet[card.setId] || 0) + 1;
+                }
+            });
+
+            sortedSeriesKeys.forEach(sKey => {
+                const setsInSeries = grouped[sKey];
+                // Ordina i set cronologicamente dentro il blocco
+                setsInSeries.sort((a, b) => (a.releaseDate || '').localeCompare(b.releaseDate || ''));
+
+                let seriesTotalCards = 0;
+                let seriesOwnedCards = 0;
+
+                setsInSeries.forEach(s => {
+                    const total = s.total || s.printedTotal || 0;
+                    const owned = ownedCountBySet[s.id] || 0;
+                    seriesTotalCards += total;
+                    seriesOwnedCards += Math.min(owned, total);
+                });
+
+                const seriesPct = seriesTotalCards > 0 ? Math.round((seriesOwnedCards / seriesTotalCards) * 100) : 0;
+                const blockTitle = SERIES_LABELS[sKey] || `${sKey} Series`;
+                const blockDomId = 'series-block-' + sKey.replace(/\s+/g, '-');
+
+                const section = document.createElement('section');
+                section.id = blockDomId;
+                section.className = 'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden scroll-mt-24';
+
+                // Header del Blocco Espansione
+                let setsGridHTML = '';
+                setsInSeries.forEach(set => {
+                    const setTotal = set.total || set.printedTotal || 0;
+                    const setOwned = ownedCountBySet[set.id] || 0;
+                    const pct = setTotal > 0 ? Math.min(100, Math.round((setOwned / setTotal) * 100)) : 0;
+                    const year = set.releaseDate ? set.releaseDate.split('/')[0] : '';
+                    const isCompleted = setTotal > 0 && setOwned >= setTotal;
+
+                    setsGridHTML += `
+                        <button onclick="openSetDetail('${set.id}')" class="group text-left bg-slate-50 hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-800 rounded-xl p-3.5 border ${isCompleted ? 'border-emerald-400 dark:border-emerald-600' : 'border-slate-200/80 dark:border-slate-700/80'} hover:border-pokeBlue dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between gap-3">
+                            <div class="flex items-center gap-3 w-full">
+                                <!-- Simbolo ufficiale del Set -->
+                                <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 p-1.5 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                    <img src="${escapeHTML(set.images?.symbol || '')}" alt="" loading="lazy"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                                         class="max-w-full max-h-full object-contain">
+                                    <span style="display:none;" class="text-xs font-extrabold text-pokeBlue">★</span>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate group-hover:text-pokeBlue dark:group-hover:text-blue-400 transition" title="${escapeHTML(set.name)}">
+                                        ${escapeHTML(set.name)}
+                                    </h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                        ${year ? year + ' • ' : ''}${setTotal} carte
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Barra Avanzamento Set -->
+                            <div class="w-full space-y-1">
+                                <div class="flex items-center justify-between text-[11px] font-bold">
+                                    <span class="${setOwned > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}">
+                                        ${setOwned} / ${setTotal}
+                                    </span>
+                                    <span class="text-slate-500 dark:text-slate-400">${pct}%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+                        </button>
+                    `;
+                });
+
+                section.innerHTML = `
+                    <div class="px-5 py-4 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-2.5 h-6 rounded-full bg-pokeRed"></span>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${escapeHTML(blockTitle)}</h3>
+                            <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                ${setsInSeries.length} Set
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs font-bold">
+                            <span class="text-slate-500 dark:text-slate-400">Blocco: <strong class="text-emerald-600 dark:text-emerald-400">${seriesOwnedCards}/${seriesTotalCards}</strong> (${seriesPct}%)</span>
+                        </div>
+                    </div>
+                    <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                        ${setsGridHTML}
+                    </div>
+                `;
+
+                container.appendChild(section);
+            });
+        }
+
+        function jumpToSeries(domId) {
+            if (!domId) return;
+            const el = document.getElementById(domId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // ================= DETTAGLIO SINGOLO SET & GRIGLIA POKELLECTOR =================
+        async function openSetDetail(setId) {
+            const setObj = allSets.find(s => s.id === setId);
+            if (!setObj) return;
+
+            currentSet = setObj;
+            setDetailFilter = 'all';
+            document.getElementById('setCardSearchInput').value = '';
+
+            // Nascondi elenco blocchi, mostra dettaglio set
+            document.getElementById('setsDirectoryView').classList.add('hidden');
+            document.getElementById('setDetailView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Popola intestazione set
+            document.getElementById('detailSetSymbol').src = setObj.images?.symbol || '';
+            document.getElementById('detailSetSeries').textContent = SERIES_LABELS[setObj.series] || setObj.series;
+            document.getElementById('detailSetName').textContent = setObj.name;
+            const year = setObj.releaseDate ? setObj.releaseDate.split('/')[0] : 'N/D';
+            document.getElementById('detailSetMeta').textContent = `Uscita: ${year} • ${setObj.total || setObj.printedTotal} carte totali`;
+
+            updateSetDetailFilterButtons();
+            await loadCardsForSet(setId);
+            updateSetDetailHeaderStats();
+            renderSetCardsGrid();
+        }
+
+        function closeSetDetail() {
+            currentSet = null;
+            currentSetCards = [];
+            document.getElementById('setDetailView').classList.add('hidden');
+            document.getElementById('setsDirectoryView').classList.remove('hidden');
+            renderSeriesDirectory();
+        }
+
+        function setDetailFilterMode(mode) {
+            setDetailFilter = mode;
+            updateSetDetailFilterButtons();
+            renderSetCardsGrid();
+        }
+
+        function updateSetDetailFilterButtons() {
+            const active = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-pokeBlue text-white shadow-sm transition';
+            const inactive = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition';
+
+            document.getElementById('setFilterAllBtn').className = setDetailFilter === 'all' ? active : inactive;
+            document.getElementById('setFilterOwnedBtn').className = setDetailFilter === 'owned' ? active : inactive;
+            document.getElementById('setFilterMissingBtn').className = setDetailFilter === 'missing' ? active : inactive;
+        }
+
+        async function loadCardsForSet(setId) {
+            const loader = document.getElementById('setCardsLoader');
+            const grid = document.getElementById('setCardsGrid');
+            grid.innerHTML = '';
+            loader.classList.remove('hidden');
+
+            try {
+                // Controlla cache locale del set
+                const cached = localStorage.getItem(CARDS_CACHE_PREFIX + setId);
+                if (cached) {
+                    currentSetCards = JSON.parse(cached);
+                    loader.classList.add('hidden');
+                    return;
+                }
+
+                // Scarica tutte le carte del set ordinate per numero
+                const res = await fetch(`${API_BASE}/cards?q=set.id:${setId}&orderBy=number&pageSize=250`);
+                if (!res.ok) throw new Error('Errore scaricamento carte set');
+                const json = await res.json();
+                currentSetCards = json.data || [];
+
+                // Ordina numericamente il numero carta (es. 1, 2, 10 invece di 1, 10, 2)
+                currentSetCards.sort((a, b) => {
+                    const numA = parseInt(String(a.number).replace(/\D/g, ''), 10) || 9999;
+                    const numB = parseInt(String(b.number).replace(/\D/g, ''), 10) || 9999;
+                    if (numA !== numB) return numA - numB;
+                    return String(a.number).localeCompare(String(b.number));
+                });
+
+                try {
+                    localStorage.setItem(CARDS_CACHE_PREFIX + setId, JSON.stringify(currentSetCards));
+                } catch (storageErr) {
+                    console.warn('Cache localStorage piena, salto caching immagini set.');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Impossibile scaricare le carte del set. Verifica la connessione.', 'error');
+                currentSetCards = [];
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function updateSetDetailHeaderStats() {
+            if (!currentSet) return;
+            const total = currentSetCards.length || currentSet.total || currentSet.printedTotal || 0;
+            let ownedCount = 0;
+            let totalSetValue = 0;
+
+            currentSetCards.forEach(c => {
+                if (ownedCardsMap[c.id]) {
+                    ownedCount++;
+                    totalSetValue += Number(ownedCardsMap[c.id].price) || 0;
+                }
+            });
+
+            const pct = total > 0 ? Math.round((ownedCount / total) * 100) : 0;
+            document.getElementById('detailSetProgressText').textContent = `${ownedCount} / ${total} (${pct}%)`;
+            document.getElementById('detailSetProgressBar').style.width = `${pct}%`;
+            document.getElementById('detailSetTotalValue').textContent = formatCurrency(totalSetValue);
+        }
+
+        // Renderizza la griglia stile Pokellector (Grigio/Desaturato se mancante, Colorato + Spunta se flaggata)
+        function renderSetCardsGrid() {
+            const grid = document.getElementById('setCardsGrid');
+            const query = document.getElementById('setCardSearchInput').value.trim().toLowerCase();
+            grid.innerHTML = '';
+
+            const filtered = currentSetCards.filter(card => {
+                const isOwned = Boolean(ownedCardsMap[card.id]);
+                if (setDetailFilter === 'owned' && !isOwned) return false;
+                if (setDetailFilter === 'missing' && isOwned) return false;
+                if (query && !card.name.toLowerCase().includes(query) && !String(card.number).toLowerCase().includes(query)) {
+                    return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Nessuna carta da mostrare con questo filtro.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(card => {
+                const ownedData = ownedCardsMap[card.id];
+                const isOwned = Boolean(ownedData);
+                const imgUrl = card.images?.small || card.images?.large || '';
+
+                const cardWrapper = document.createElement('div');
+                cardWrapper.className = `group relative bg-white dark:bg-slate-900 rounded-xl p-2 border ${isOwned ? 'border-emerald-500 dark:border-emerald-500 shadow-md shadow-emerald-500/10' : 'border-slate-200 dark:border-slate-800'} flex flex-col justify-between transition-all`;
+
+                cardWrapper.innerHTML = `
+                    <!-- Pulsante Rapido Flag / Spunta in alto a destra -->
+                    <button onclick="quickToggleCardFlag(event, '${card.id}')"
+                            title="${isOwned ? 'Rimuovi dalla collezione' : 'Aggiungi alla collezione'}"
+                            class="absolute top-3 right-3 z-20 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition transform active:scale-90 ${isOwned ? 'bg-emerald-500 text-white' : 'bg-slate-900/70 text-slate-200 hover:bg-emerald-500 hover:text-white'}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Immagine Carta (Cliccando apre il modale dettagli/modifica) -->
+                    <div onclick="openCardDetailModal('${card.id}')" class="cursor-pointer relative aspect-[2.5/3.5] w-full rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <img src="${escapeHTML(imgUrl)}" alt="${escapeHTML(card.name)}" loading="lazy"
+                             class="w-full h-full object-contain ${isOwned ? 'card-owned' : 'card-unowned'}">
+                    </div>
+
+                    <!-- Info Rapide sotto l'immagine -->
+                    <div onclick="openCardDetailModal('${card.id}')" class="cursor-pointer pt-2 px-0.5 space-y-1">
+                        <div class="flex items-center justify-between gap-1 text-[11px]">
+                            <span class="font-mono font-bold text-slate-500 dark:text-slate-400">#${escapeHTML(card.number)}</span>
+                            ${isOwned ? `<span class="px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">${escapeHTML(ownedData.condition)}</span>` : '<span class="text-[10px] text-slate-400">Mancante</span>'}
+                        </div>
+                        <p class="text-xs font-extrabold text-slate-900 dark:text-white truncate" title="${escapeHTML(card.name)}">
+                            ${escapeHTML(card.name)}
+                        </p>
+                        ${isOwned && (ownedData.price > 0 || ownedData.purchaseDate) ? `
+                            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5 border-t border-slate-100 dark:border-slate-800">
+                                <span>${ownedData.price > 0 ? formatCurrency(ownedData.price) : ''}</span>
+                                <span>${ownedData.purchaseDate ? formatDateIT(ownedData.purchaseDate) : ''}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                grid.appendChild(cardWrapper);
+            });
+        }
+
+        // Flag / Deflag rapido cliccando sulla spunta nella griglia Pokellector
+        function quickToggleCardFlag(event, cardId) {
+            event.stopPropagation();
+            const cardObj = currentSetCards.find(c => c.id === cardId);
+            if (!cardObj) return;
+
+            if (ownedCardsMap[cardId]) {
+                delete ownedCardsMap[cardId];
+                showToast(`"${cardObj.name}" rimossa dalla collezione.`, 'info');
             } else {
-                sortedRarities.forEach(([rarity, count]) => {
-                    const style = RARITY_STYLES[rarity] || RARITY_STYLES['Comune'];
+                ownedCardsMap[cardId] = {
+                    id: cardObj.id,
+                    name: cardObj.name,
+                    number: cardObj.number,
+                    setId: currentSet.id,
+                    setName: currentSet.name,
+                    series: currentSet.series,
+                    rarity: cardObj.rarity || 'Comune',
+                    image: cardObj.images?.large || cardObj.images?.small || '',
+                    condition: 'Near Mint',
+                    price: 0,
+                    purchaseDate: new Date().toISOString().split('T')[0],
+                    variant: 'Normale',
+                    updatedAt: Date.now()
+                };
+                showToast(`"${cardObj.name}" aggiunta alla collezione!`, 'success');
+            }
+
+            saveCollectionToStorage();
+            updateSetDetailHeaderStats();
+            renderSetCardsGrid();
+        }
+
+        // ================= MODALE DETTAGLIO & MODIFICA CARTA =================
+        function openCardDetailModal(cardId) {
+            // Cerca la carta nel set attivo oppure nella collezione posseduta
+            let cardObj = currentSetCards.find(c => c.id === cardId);
+            const existingOwned = ownedCardsMap[cardId];
+
+            if (!cardObj && existingOwned) {
+                cardObj = {
+                    id: existingOwned.id,
+                    name: existingOwned.name,
+                    number: existingOwned.number,
+                    rarity: existingOwned.rarity,
+                    artist: '',
+                    images: { large: existingOwned.image, small: existingOwned.image },
+                    set: { id: existingOwned.setId, name: existingOwned.setName, series: existingOwned.series }
+                };
+            }
+            if (!cardObj) return;
+
+            currentModalCardObj = cardObj;
+            const isOwned = Boolean(existingOwned);
+
+            document.getElementById('detailCardId').value = cardObj.id;
+            document.getElementById('modalCardNumberBadge').textContent = `#${cardObj.number}`;
+            document.getElementById('modalCardTitle').textContent = cardObj.name;
+
+            const setName = currentSet ? currentSet.name : (cardObj.set?.name || existingOwned?.setName || '');
+            document.getElementById('modalCardSetInfo').textContent = setName;
+            document.getElementById('modalCardRarityInfo').textContent =
+                `${cardObj.rarity || 'Rarità N/D'}${cardObj.artist ? ' • Illus. ' + cardObj.artist : ''}`;
+
+            const imgEl = document.getElementById('modalCardImage');
+            imgEl.src = cardObj.images?.large || cardObj.images?.small || '';
+
+            // Popola form con i valori salvati o default
+            document.getElementById('detailOwnedToggle').checked = isOwned;
+            document.getElementById('detailCondition').value = existingOwned?.condition || 'Near Mint';
+            document.getElementById('detailPrice').value = existingOwned ? Number(existingOwned.price).toFixed(2) : '0.00';
+            document.getElementById('detailPurchaseDate').value = existingOwned?.purchaseDate || new Date().toISOString().split('T')[0];
+            document.getElementById('detailVariant').value = existingOwned?.variant || 'Normale';
+
+            updateModalImageGrayscale();
+
+            const modal = document.getElementById('cardDetailModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function updateModalImageGrayscale() {
+            const isChecked = document.getElementById('detailOwnedToggle').checked;
+            const imgEl = document.getElementById('modalCardImage');
+            if (isChecked) {
+                imgEl.classList.remove('grayscale', 'opacity-60');
+            } else {
+                imgEl.classList.add('grayscale', 'opacity-60');
+            }
+        }
+
+        function closeCardDetailModal() {
+            const modal = document.getElementById('cardDetailModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentModalCardObj = null;
+        }
+
+        function saveCardDetail(event) {
+            event.preventDefault();
+            if (!currentModalCardObj) return;
+
+            const cardId = currentModalCardObj.id;
+            const isOwned = document.getElementById('detailOwnedToggle').checked;
+
+            if (!isOwned) {
+                // Se deflaggata, rimuovi dalla collezione
+                if (ownedCardsMap[cardId]) {
+                    delete ownedCardsMap[cardId];
+                    showToast(`"${currentModalCardObj.name}" rimossa dalla collezione.`, 'info');
+                }
+            } else {
+                const existing = ownedCardsMap[cardId];
+                ownedCardsMap[cardId] = {
+                    id: cardId,
+                    name: currentModalCardObj.name,
+                    number: currentModalCardObj.number,
+                    setId: currentSet ? currentSet.id : (existing?.setId || currentModalCardObj.set?.id || 'custom'),
+                    setName: currentSet ? currentSet.name : (existing?.setName || currentModalCardObj.set?.name || 'Set Sconosciuto'),
+                    series: currentSet ? currentSet.series : (existing?.series || currentModalCardObj.set?.series || 'Other'),
+                    rarity: currentModalCardObj.rarity || existing?.rarity || 'Comune',
+                    image: currentModalCardObj.images?.large || currentModalCardObj.images?.small || existing?.image || '',
+                    condition: document.getElementById('detailCondition').value,
+                    price: Math.max(0, parseFloat(document.getElementById('detailPrice').value) || 0),
+                    purchaseDate: document.getElementById('detailPurchaseDate').value || '',
+                    variant: document.getElementById('detailVariant').value,
+                    updatedAt: Date.now()
+                };
+                showToast(`Dettagli di "${currentModalCardObj.name}" salvati!`, 'success');
+            }
+
+            saveCollectionToStorage();
+            closeCardDetailModal();
+
+            if (currentSet) {
+                updateSetDetailHeaderStats();
+                renderSetCardsGrid();
+            }
+            if (!document.getElementById('viewCollection').classList.contains('hidden')) {
+                renderOwnedCollection();
+            }
+        }
+
+        // ================= MODALE CARTA EXTRA MANUALE =================
+        function openManualCardModal() {
+            document.getElementById('manualCardForm').reset();
+            document.getElementById('manPurchaseDate').value = new Date().toISOString().split('T')[0];
+            const modal = document.getElementById('manualCardModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeManualCardModal() {
+            const modal = document.getElementById('manualCardModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveManualCard(event) {
+            event.preventDefault();
+            const id = 'manual-' + Date.now();
+            const name = document.getElementById('manName').value.trim();
+            const setName = document.getElementById('manSet').value.trim();
+
+            ownedCardsMap[id] = {
+                id: id,
+                name: name,
+                number: document.getElementById('manNumber').value.trim(),
+                setId: 'custom',
+                setName: setName,
+                series: 'Other',
+                rarity: 'Promo',
+                image: document.getElementById('manImage').value.trim(),
+                condition: document.getElementById('manCondition').value,
+                price: Math.max(0, parseFloat(document.getElementById('manPrice').value) || 0),
+                purchaseDate: document.getElementById('manPurchaseDate').value || '',
+                variant: 'Normale',
+                updatedAt: Date.now()
+            };
+
+            saveCollectionToStorage();
+            closeManualCardModal();
+            showToast(`"${name}" aggiunta alla collezione!`, 'success');
+            if (!document.getElementById('viewCollection').classList.contains('hidden')) {
+                populateOwnedSetFilter();
+                renderOwnedCollection();
+            }
+        }
+
+        // ================= VISTA 2: LA MIA COLLEZIONE =================
+        function populateOwnedSetFilter() {
+            const select = document.getElementById('filterOwnedSet');
+            const currentVal = select.value;
+            const sets = new Set();
+            Object.values(ownedCardsMap).forEach(c => {
+                if (c.setName) sets.add(c.setName);
+            });
+
+            select.innerHTML = '<option value="">Tutti i Set</option>';
+            Array.from(sets).sort().forEach(sName => {
+                const opt = document.createElement('option');
+                opt.value = sName;
+                opt.textContent = sName;
+                select.appendChild(opt);
+            });
+            select.value = currentVal;
+        }
+
+        function renderOwnedCollection() {
+            const ownedList = Object.values(ownedCardsMap);
+
+            // Aggiorna Dashboard
+            let totalValue = 0;
+            const uniqueSets = new Set();
+            const conditionCounts = {};
+
+            ownedList.forEach(c => {
+                totalValue += Number(c.price) || 0;
+                if (c.setName) uniqueSets.add(c.setName);
+                const cond = c.condition || 'Near Mint';
+                conditionCounts[cond] = (conditionCounts[cond] || 0) + 1;
+            });
+
+            document.getElementById('statUniqueCards').textContent = ownedList.length;
+            document.getElementById('statSetsCount').textContent = uniqueSets.size;
+            document.getElementById('statTotalValue').textContent = formatCurrency(totalValue);
+
+            const condContainer = document.getElementById('conditionBreakdownContainer');
+            condContainer.innerHTML = '';
+            const sortedConds = Object.entries(conditionCounts).sort((a, b) => b[1] - a[1]);
+            if (sortedConds.length === 0) {
+                condContainer.innerHTML = '<span class="text-xs text-slate-400">Nessun dato</span>';
+            } else {
+                sortedConds.forEach(([cond, cnt]) => {
                     const badge = document.createElement('span');
-                    badge.className = `inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${style}`;
-                    badge.innerHTML = `<span>${escapeHTML(rarity.split('/')[0].trim())}</span><span class="font-extrabold">(${count})</span>`;
-                    rarityContainer.appendChild(badge);
+                    badge.className = 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+                    badge.textContent = `${cond} (${cnt})`;
+                    condContainer.appendChild(badge);
                 });
             }
-        }
 
-        // ================= RENDER GRIGLIA CARTE =================
-        function renderCollection() {
-            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-            const filterRarity = document.getElementById('filterRarity').value;
-            const filterCondition = document.getElementById('filterCondition').value;
-            const filterLanguage = document.getElementById('filterLanguage').value;
+            // Filtri
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const filterSet = document.getElementById('filterOwnedSet').value;
+            const filterCond = document.getElementById('filterCondition').value;
             const sortBy = document.getElementById('sortSelect').value;
 
-            // Mostra/nascondi pulsante reset filtri
-            const hasActiveFilters = searchTerm || filterRarity || filterCondition || filterLanguage;
-            document.getElementById('resetFiltersBtn').classList.toggle('hidden', !hasActiveFilters);
+            document.getElementById('resetFiltersBtn').classList.toggle('hidden', !(query || filterSet || filterCond));
 
-            // Filtraggio
-            let filtered = collection.filter(card => {
-                const matchesSearch = !searchTerm ||
-                    card.name.toLowerCase().includes(searchTerm) ||
-                    card.set.toLowerCase().includes(searchTerm) ||
-                    card.number.toLowerCase().includes(searchTerm);
-                const matchesRarity = !filterRarity || card.rarity === filterRarity;
-                const matchesCondition = !filterCondition || card.condition === filterCondition;
-                const matchesLanguage = !filterLanguage || card.language === filterLanguage;
-
-                return matchesSearch && matchesRarity && matchesCondition && matchesLanguage;
+            let filtered = ownedList.filter(c => {
+                const matchQuery = !query || c.name.toLowerCase().includes(query) || c.setName.toLowerCase().includes(query) || String(c.number).toLowerCase().includes(query);
+                const matchSet = !filterSet || c.setName === filterSet;
+                const matchCond = !filterCond || c.condition === filterCond;
+                return matchQuery && matchSet && matchCond;
             });
 
-            // Ordinamento
             filtered.sort((a, b) => {
-                if (sortBy === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
-                if (sortBy === 'valueDesc') return (b.value * b.quantity) - (a.value * a.quantity);
-                if (sortBy === 'valueAsc') return (a.value * a.quantity) - (b.value * b.quantity);
+                if (sortBy === 'newest') return (b.updatedAt || 0) - (a.updatedAt || 0);
+                if (sortBy === 'purchaseDateDesc') return (b.purchaseDate || '').localeCompare(a.purchaseDate || '');
+                if (sortBy === 'valueDesc') return (b.price || 0) - (a.price || 0);
+                if (sortBy === 'valueAsc') return (a.price || 0) - (b.price || 0);
                 if (sortBy === 'nameAsc') return a.name.localeCompare(b.name);
-                if (sortBy === 'qtyDesc') return b.quantity - a.quantity;
                 return 0;
             });
 
-            // Aggiorna contatore risultati
-            document.getElementById('resultsCountText').textContent =
-                `Visualizzazione di ${filtered.length} ${filtered.length === 1 ? 'carta' : 'carte'} su ${collection.length}`;
+            document.getElementById('resultsCountText').textContent = `Visualizzazione di ${filtered.length} carte su ${ownedList.length} possedute`;
 
             const grid = document.getElementById('cardsGrid');
             const emptyState = document.getElementById('emptyState');
@@ -651,272 +1387,63 @@
             grid.classList.remove('hidden');
             emptyState.classList.add('hidden');
 
-            // Generazione Card HTML
             filtered.forEach(card => {
-                const rarityClass = RARITY_STYLES[card.rarity] || RARITY_STYLES['Comune'];
-                const flag = LANG_FLAGS[card.language] || '🌍';
-                const totalCardValue = (Number(card.value) || 0) * (Number(card.quantity) || 1);
-                const isHolo = card.variant !== 'Normale' || card.rarity.includes('Holo') || card.rarity.includes('Ultra') || card.rarity.includes('Illustration') || card.rarity.includes('Hyper');
+                const el = document.createElement('article');
+                el.className = 'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col justify-between';
 
-                const cardEl = document.createElement('article');
-                cardEl.className = 'group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200 flex flex-col overflow-hidden';
-
-                // Immagine o placeholder stilizzato Pokémon TCG
-                const imageSection = card.image ? `
-                    <div class="relative h-56 bg-gradient-to-b from-slate-100 to-slate-200/70 dark:from-slate-800/80 dark:to-slate-900 flex items-center justify-center p-3 overflow-hidden">
-                        <img src="${escapeHTML(card.image)}" alt="${escapeHTML(card.name)}" loading="lazy"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                             class="h-full w-auto object-contain rounded-lg shadow-md group-hover:scale-105 transition-transform duration-300 z-10">
-                        <!-- Fallback placeholder se l'URL immagine non carica -->
-                        <div style="display:none;" class="w-36 h-48 rounded-xl bg-gradient-to-br from-pokeBlue via-indigo-700 to-slate-900 border-4 border-amber-400 shadow-inner flex-col items-center justify-center p-3 text-center text-white">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-b from-pokeRed to-white border-2 border-slate-900 mb-2"></div>
-                            <span class="text-xs font-extrabold tracking-tight line-clamp-2">${escapeHTML(card.name)}</span>
-                            <span class="text-[10px] text-amber-300 mt-1">${escapeHTML(card.number)}</span>
+                el.innerHTML = `
+                    <div onclick="openCardDetailModal('${card.id}')" class="cursor-pointer">
+                        <div class="relative h-56 bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center p-3">
+                            ${card.image ? `<img src="${escapeHTML(card.image)}" alt="${escapeHTML(card.name)}" loading="lazy" class="h-full w-auto object-contain rounded-lg shadow">` : `<div class="text-xs font-bold text-slate-400">Nessuna immagine</div>`}
+                            <span class="absolute top-3 right-3 px-2 py-1 rounded-lg bg-slate-900/85 text-white text-[11px] font-bold">
+                                ${escapeHTML(card.condition)}
+                            </span>
                         </div>
-                        ${isHolo ? '<div class="absolute inset-0 holo-shimmer pointer-events-none"></div>' : ''}
-                    </div>
-                ` : `
-                    <div class="relative h-56 bg-gradient-to-b from-slate-100 to-slate-200/70 dark:from-slate-800/80 dark:to-slate-900 flex items-center justify-center p-3 overflow-hidden">
-                        <div class="w-36 h-48 rounded-xl bg-gradient-to-br from-pokeBlue via-indigo-800 to-slate-900 border-4 border-amber-400 shadow-md group-hover:scale-105 transition-transform duration-300 flex flex-col items-center justify-center p-3 text-center text-white relative overflow-hidden">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-b from-pokeRed to-white border-2 border-slate-900 mb-2 flex items-center justify-center">
-                                <div class="w-3 h-3 rounded-full bg-white border border-slate-900"></div>
+                        <div class="p-4 space-y-2">
+                            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                <span class="truncate font-medium">${escapeHTML(card.setName)}</span>
+                                <span class="font-mono font-bold">#${escapeHTML(card.number)}</span>
                             </div>
-                            <span class="text-xs font-extrabold tracking-tight line-clamp-2">${escapeHTML(card.name)}</span>
-                            <span class="text-[10px] text-amber-300 font-semibold mt-1">${escapeHTML(card.number)}</span>
-                            <span class="text-[9px] text-slate-300 mt-0.5 line-clamp-1">${escapeHTML(card.set)}</span>
-                            ${isHolo ? '<div class="absolute inset-0 holo-shimmer pointer-events-none"></div>' : ''}
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white truncate">${escapeHTML(card.name)}</h3>
+                            <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                                <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">${formatCurrency(card.price)}</span>
+                                <span class="text-slate-400">${card.purchaseDate ? 'Acq: ' + formatDateIT(card.purchaseDate) : 'Data N/D'}</span>
+                            </div>
                         </div>
+                    </div>
+                    <div class="px-4 pb-4">
+                        <button onclick="openCardDetailModal('${card.id}')" class="w-full py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                            Modifica Condizione / Prezzo / Data
+                        </button>
                     </div>
                 `;
-
-                cardEl.innerHTML = `
-                    <!-- Area Immagine + Badge Sovrapposti -->
-                    <div class="relative">
-                        ${imageSection}
-                        <!-- Badge Lingua in alto a sinistra -->
-                        <span title="Lingua: ${escapeHTML(card.language)}" class="absolute top-3 left-3 z-20 px-2 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-bold shadow-sm border border-slate-200/80 dark:border-slate-700/80">
-                            ${flag} ${escapeHTML(card.language.slice(0, 3).toUpperCase())}
-                        </span>
-                        <!-- Badge Condizione in alto a destra -->
-                        <span class="absolute top-3 right-3 z-20 px-2 py-1 rounded-lg bg-slate-900/85 text-white text-[11px] font-bold shadow-sm">
-                            ${escapeHTML(card.condition)}
-                        </span>
-                    </div>
-
-                    <!-- Dettagli Carta -->
-                    <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
-                        <div>
-                            <!-- Set e Numero -->
-                            <div class="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                                <span class="truncate font-medium" title="${escapeHTML(card.set)}">${escapeHTML(card.set)}</span>
-                                <span class="font-mono font-bold text-slate-700 dark:text-slate-300 shrink-0">${escapeHTML(card.number)}</span>
-                            </div>
-
-                            <!-- Nome Pokémon -->
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white leading-snug line-clamp-1" title="${escapeHTML(card.name)}">
-                                ${escapeHTML(card.name)}
-                            </h3>
-
-                            <!-- Badge Rarità e Variante -->
-                            <div class="flex flex-wrap items-center gap-1.5 mt-2">
-                                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold border ${rarityClass}">
-                                    ${escapeHTML(card.rarity)}
-                                </span>
-                                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                                    ${escapeHTML(card.variant)}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Prezzo e Controlli -->
-                        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                            <div class="flex items-baseline justify-between">
-                                <div>
-                                    <span class="text-[11px] text-slate-400 block">Valore unitario: ${formatCurrency(card.value)}</span>
-                                    <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">
-                                        Tot: ${formatCurrency(totalCardValue)}
-                                    </span>
-                                </div>
-
-                                <!-- Selettore Rapido Quantità (+/-) -->
-                                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 border border-slate-200 dark:border-slate-700">
-                                    <button onclick="changeQuantity('${card.id}', -1)" aria-label="Diminuisci quantità" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 font-bold transition">
-                                        −
-                                    </button>
-                                    <span class="w-8 text-center text-xs font-extrabold text-slate-900 dark:text-white">
-                                        ${card.quantity}
-                                    </span>
-                                    <button onclick="changeQuantity('${card.id}', 1)" aria-label="Aumenta quantità" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 font-bold transition">
-                                        +
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Azioni Modifica / Elimina -->
-                            <div class="flex items-center gap-2">
-                                <button onclick="openCardModal('${card.id}')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5 transition">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    Modifica
-                                </button>
-                                <button onclick="promptDeleteCard('${card.id}')" aria-label="Elimina carta" class="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                grid.appendChild(cardEl);
+                grid.appendChild(el);
             });
         }
 
         function resetFilters() {
             document.getElementById('searchInput').value = '';
-            document.getElementById('filterRarity').value = '';
+            document.getElementById('filterOwnedSet').value = '';
             document.getElementById('filterCondition').value = '';
-            document.getElementById('filterLanguage').value = '';
             document.getElementById('sortSelect').value = 'newest';
-            renderCollection();
+            renderOwnedCollection();
         }
 
-        // ================= GESTIONE QUANTITÀ RAPIDA =================
-        function changeQuantity(id, delta) {
-            const index = collection.findIndex(c => c.id === id);
-            if (index === -1) return;
-
-            const newQty = Number(collection[index].quantity) + delta;
-            if (newQty < 1) {
-                // Se scende sotto 1, chiede conferma eliminazione
-                promptDeleteCard(id);
-                return;
-            }
-
-            collection[index].quantity = newQty;
-            saveToStorage();
-            renderAll();
-        }
-
-        // ================= MODALE AGGIUNGI / MODIFICA =================
-        function openCardModal(editId = null) {
-            const modal = document.getElementById('cardModal');
-            const form = document.getElementById('cardForm');
-            const title = document.getElementById('modalTitle');
-
-            form.reset();
-
-            if (editId) {
-                const card = collection.find(c => c.id === editId);
-                if (!card) return;
-
-                title.textContent = 'Modifica Carta';
-                document.getElementById('cardId').value = card.id;
-                document.getElementById('cardName').value = card.name;
-                document.getElementById('cardSet').value = card.set;
-                document.getElementById('cardNumber').value = card.number;
-                document.getElementById('cardRarity').value = card.rarity;
-                document.getElementById('cardVariant').value = card.variant;
-                document.getElementById('cardLanguage').value = card.language;
-                document.getElementById('cardCondition').value = card.condition;
-                document.getElementById('cardQuantity').value = card.quantity;
-                document.getElementById('cardValue').value = Number(card.value).toFixed(2);
-                document.getElementById('cardImage').value = card.image || '';
-            } else {
-                title.textContent = 'Aggiungi Nuova Carta';
-                document.getElementById('cardId').value = '';
-                document.getElementById('cardQuantity').value = 1;
-                document.getElementById('cardValue').value = '0.00';
-                document.getElementById('cardCondition').value = 'Near Mint';
-            }
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.getElementById('cardName').focus();
-        }
-
-        function closeCardModal() {
-            const modal = document.getElementById('cardModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function saveCard(event) {
-            event.preventDefault();
-
-            const id = document.getElementById('cardId').value;
-            const cardData = {
-                id: id || 'card-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-                name: document.getElementById('cardName').value.trim(),
-                set: document.getElementById('cardSet').value.trim(),
-                number: document.getElementById('cardNumber').value.trim(),
-                rarity: document.getElementById('cardRarity').value,
-                variant: document.getElementById('cardVariant').value,
-                language: document.getElementById('cardLanguage').value,
-                condition: document.getElementById('cardCondition').value,
-                quantity: Math.max(1, parseInt(document.getElementById('cardQuantity').value, 10) || 1),
-                value: Math.max(0, parseFloat(document.getElementById('cardValue').value) || 0),
-                image: document.getElementById('cardImage').value.trim(),
-                createdAt: id ? (collection.find(c => c.id === id)?.createdAt || Date.now()) : Date.now()
-            };
-
-            if (id) {
-                const idx = collection.findIndex(c => c.id === id);
-                if (idx !== -1) {
-                    collection[idx] = cardData;
-                    showToast(`"${cardData.name}" aggiornata!`, 'success');
-                }
-            } else {
-                collection.unshift(cardData);
-                showToast(`"${cardData.name}" aggiunta alla collezione!`, 'success');
-            }
-
-            saveToStorage();
-            closeCardModal();
-            renderAll();
-        }
-
-        // ================= ELIMINAZIONE CARTA =================
-        function promptDeleteCard(id) {
-            const card = collection.find(c => c.id === id);
-            if (!card) return;
-
-            cardToDeleteId = id;
-            document.getElementById('deleteCardNameText').textContent =
-                `Stai per eliminare "${card.name}" (${card.set} - ${card.number}) dalla tua collezione.`;
-
-            const modal = document.getElementById('deleteModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeDeleteModal() {
-            cardToDeleteId = null;
-            const modal = document.getElementById('deleteModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-            if (!cardToDeleteId) return;
-            const deletedCard = collection.find(c => c.id === cardToDeleteId);
-            collection = collection.filter(c => c.id !== cardToDeleteId);
-            saveToStorage();
-            closeDeleteModal();
-            renderAll();
-            if (deletedCard) {
-                showToast(`"${deletedCard.name}" rimossa.`, 'info');
-            }
-        });
-
-        // ================= BACKUP ESPORTA / IMPORTA JSON =================
+        // ================= BACKUP JSON (ESPORTA / IMPORTA) =================
         function exportCollection() {
             try {
-                const dataStr = JSON.stringify(collection, null, 2);
+                const payload = {
+                    version: 2,
+                    exportedAt: new Date().toISOString(),
+                    cards: ownedCardsMap
+                };
+                const dataStr = JSON.stringify(payload, null, 2);
                 const blob = new Blob([dataStr], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
 
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'backup-collezione-pokemon.json';
+                a.download = `pokellector-backup-${new Date().toISOString().split('T')[0]}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -924,7 +1451,7 @@
 
                 showToast('Backup JSON scaricato con successo!', 'success');
             } catch (e) {
-                showToast('Errore durante l\'esportazione del file JSON.', 'error');
+                showToast('Errore durante l\'esportazione JSON.', 'error');
             }
         }
 
@@ -935,35 +1462,51 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    if (!Array.isArray(imported)) {
-                        throw new Error('Formato file non valido');
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && parsed.cards && typeof parsed.cards === 'object') {
+                        ownedCardsMap = parsed.cards;
+                    } else if (Array.isArray(parsed)) {
+                        // Retrocompatibilità con backup v1
+                        const newMap = {};
+                        parsed.forEach(item => {
+                            const cid = item.id || 'imp-' + Math.random().toString(36).slice(2, 8);
+                            newMap[cid] = {
+                                id: cid,
+                                name: item.name,
+                                number: item.number || 'N/D',
+                                setId: item.setId || 'custom',
+                                setName: item.set || item.setName || 'Set Importato',
+                                series: item.series || 'Other',
+                                rarity: item.rarity || 'Comune',
+                                image: item.image || '',
+                                condition: item.condition || 'Near Mint',
+                                price: Number(item.price || item.value) || 0,
+                                purchaseDate: item.purchaseDate || '',
+                                variant: item.variant || 'Normale',
+                                updatedAt: Date.now()
+                            };
+                        });
+                        ownedCardsMap = newMap;
+                    } else {
+                        throw new Error('Formato non riconosciuto');
                     }
 
-                    // Validazione base dei record importati
-                    const validCards = imported.filter(item => item && typeof item.name === 'string' && typeof item.set === 'string').map(item => ({
-                        id: item.id || 'card-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-                        name: String(item.name),
-                        set: String(item.set),
-                        number: String(item.number || 'N/D'),
-                        rarity: String(item.rarity || 'Comune'),
-                        variant: String(item.variant || 'Normale'),
-                        language: String(item.language || 'Italiano'),
-                        condition: String(item.condition || 'Near Mint'),
-                        quantity: Math.max(1, parseInt(item.quantity, 10) || 1),
-                        value: Math.max(0, parseFloat(item.value) || 0),
-                        image: item.image ? String(item.image) : '',
-                        createdAt: item.createdAt || Date.now()
-                    }));
-
-                    collection = validCards;
-                    saveToStorage();
-                    renderAll();
-                    showToast(`Importate ${validCards.length} carte dal backup!`, 'success');
+                    saveCollectionToStorage();
+                    if (currentSet) {
+                        updateSetDetailHeaderStats();
+                        renderSetCardsGrid();
+                    } else {
+                        renderSeriesDirectory();
+                    }
+                    if (!document.getElementById('viewCollection').classList.contains('hidden')) {
+                        populateOwnedSetFilter();
+                        renderOwnedCollection();
+                    }
+                    showToast(`Importate ${Object.keys(ownedCardsMap).length} carte nella collezione!`, 'success');
                 } catch (err) {
                     showToast('File JSON non valido o corrotto.', 'error');
                 } finally {
-                    event.target.value = ''; // Reset input file
+                    event.target.value = '';
                 }
             };
             reader.readAsText(file);
@@ -971,10 +1514,14 @@
 
         // ================= UTILITÀ =================
         function formatCurrency(amount) {
-            return new Intl.NumberFormat('it-IT', {
-                style: 'currency',
-                currency: 'EUR'
-            }).format(Number(amount) || 0);
+            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+        }
+
+        function formatDateIT(isoDate) {
+            if (!isoDate) return '';
+            const parts = isoDate.split('-');
+            if (parts.length !== 3) return isoDate;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
 
         function escapeHTML(str) {
@@ -990,35 +1537,26 @@
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-
             const colors = {
                 success: 'bg-emerald-600 text-white',
                 error: 'bg-red-600 text-white',
                 info: 'bg-slate-800 dark:bg-slate-700 text-white'
             };
-
             toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
             toast.textContent = message;
-
             container.appendChild(toast);
 
-            // Animazione ingresso
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
-            // Rimozione automatica dopo 3 secondi
+            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('translate-y-2', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
-        // Chiusura modali con tasto ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                closeCardModal();
-                closeDeleteModal();
+                closeCardDetailModal();
+                closeManualCardModal();
             }
         });
     </script>
