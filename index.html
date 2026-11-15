@@ -279,7 +279,7 @@
       transition: width 0.3s ease;
     }
 
-    /* Set Detail View (Pokellector Card Grid) */
+    /* Set Detail View */
     #set-detail-view { display: none; }
     .back-bar {
       display: flex;
@@ -699,9 +699,7 @@
 </div>
 
 <script>
-  // =========================================================================
   // CATALOGO COMPLETO BLOCCHI DI ESPANSIONE (ORDINATO E CORRETTO)
-  // =========================================================================
   const CATALOG = {
     western: [
       {
@@ -801,9 +799,6 @@
       }
     ],
 
-    // =========================================================================
-    // SEZIONE GIAPPONESE (JP) CORRETTA E SUDDIVISA CRONOLOGICAMENTE
-    // =========================================================================
     japanese: [
       {
         series: "Mega Evolution Series (JP • M)",
@@ -900,11 +895,8 @@
     ]
   };
 
-  // =========================================================================
-  // LOGICA E GESTIONE DATI
-  // =========================================================================
-  const STORAGE_KEY = "pokevault_collection_v5";
-  const CACHE_KEY = "pokevault_cards_cache_v5";
+  const STORAGE_KEY = "pokevault_collection_v6";
+  const CACHE_KEY = "pokevault_cards_cache_v6";
 
   let collection = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   let cardsCache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
@@ -1090,7 +1082,6 @@
       }
     }
 
-    // Unisci carte manuali
     const manualCards = Object.values(collection)
       .filter(c => c.setId === setObj.id && c.isManual)
       .map(c => ({ id: c.cardId, number: c.number || "—", name: c.name || "Carta Manuale", image: c.customImage || "https://images.pokemontcg.io/base1/back.png" }));
