@@ -1,27 +1,3 @@
-Ecco il codice completo di **`index.html`**, costruito partendo esattamente dal tuo file originale, mantenendo intatti lo stile grafico, i colori, le card dei set e la suddivisione in blocchi.
-
-### Tutte le aggiunte implementate:
-
-1. **Stile grafico & suddivisione in blocchi identici all'originale**: stesso layout, stesse card e barre di progresso per ogni set e per ogni blocco.
-2. **Tasti di navigazione verso la Home**:
-* Cliccando sul logo **PokéVault TCG** o sul nuovo tasto **🏠 Home** in alto a destra si torna subito alla schermata principale.
-* Nella vista dettaglio del singolo set è presente il tasto **← Tutti i Blocchi**.
-
-
-3. **Sezione Occidentale & Giapponese (Switch in alto) con database completo in stile Pokellector**:
-* Aggiunti tutti i **set speciali e promozionali** sia nella sezione Occidentale (*Southern Islands, McDonald's Collection, Celebrations, Shining Fates, Hidden Fates, Dragon Majesty, Detective Pikachu, Black Star Promos...*) sia nella sezione Giapponese (*Southern Islands JP, Premium File, Carddass Part 1 & 2, Pokémon VS, Pokémon Web, 20th/25th Anniversary, Shiny Star V, VMAX Climax, VSTAR Universe, Shiny Treasure ex, Terastal Fest ex...*).
-* Caricamento automatico delle **immagini ufficiali** per ogni carta tramite API TCGdex (EN/JA) e Pokémon TCG API con fallback intelligente.
-
-
-4. **Terza Sezione: ⭐ Set Personalizzati**:
-* Selezionabile direttamente dallo switch principale in alto (**⭐ Set Personalizzati**).
-* Puoi creare quanti set personalizzati desideri (es. *"Collezione Charizard"*, *"Carte Illustrate Preferite"*, *"Da Scambiare"*).
-* All'interno di ogni set personalizzato hai il pulsante **🔍 Cerca e Aggiungi Carte**, che apre un motore di ricerca interno collegato al database delle carte per cercare qualsiasi Pokémon/carta per nome, visualizzarne subito l'anteprima e aggiungerla al tuo set personalizzato con un clic (oltre alla possibilità di aggiungere carte manualmente).
-* Tutte le carte nei set personalizzati supportano il flag posseduta/mancante, l'effetto bianco e nero/colori, la condizione, il prezzo, la data di acquisto e l'esportazione/importazione nel backup JSON.
-
-
-
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
