@@ -37,7 +37,7 @@
   // ---------- Carte dei set (occidentali + giapponesi) ----------
   async function westCards(id) {
     const key = 'w:' + id, c = await kvGet(key);
-    if (c && c.length) return c;
+    if (c && c.length && !isStale(key, c.length)) return c;
     let cards = [];
     try { // paginazione: i set con più di 250 carte erano troncati
       for (let p = 1; p <= 6; p++) {
@@ -49,16 +49,16 @@
     if (!cards.length) { // riserva: TCGdex (inglese)
       try { const j = await getJson(`${TCGDEX}/en/sets/${id}`, 2); cards = (j.cards || []).map(c => ({ id: id + '-' + c.localId, name: c.name, number: c.localId, rarity: '', images: imgs(c.image) })); } catch {}
     }
-    if (!cards.length) throw new Error('vuoto');
-    cards = sortCards(cards); kvSet(key, cards); return cards;
+    if (!cards.length) { if (c && c.length) return c; throw new Error('vuoto'); }
+    cards = sortCards(cards); kvSet(key, cards); stamp(key); return cards;
   }
   async function jpCards(setId) {
     const c = await kvGet(setId);
-    if (c && c.length) return c;
+    if (c && c.length && !isStale(setId, c.length)) return c;
     const j = await getJson(`${TCGDEX}/ja/sets/${encodeURIComponent(setId.slice(3))}`);
     const cards = sortCards((j.cards || []).map(c => ({ id: 'jp:' + c.id, name: c.name || ('#' + c.localId), number: c.localId, rarity: '', images: imgs(c.image) })));
-    if (!cards.length) throw new Error('vuoto');
-    kvSet(setId, cards); return cards;
+    if (!cards.length) { if (c && c.length) return c; throw new Error('vuoto'); }
+    kvSet(setId, cards); stamp(setId); return cards;
   }
   loadCardsForSet = async function (setId) {
     const loader = $('setCardsLoader');
@@ -256,7 +256,7 @@
   // ---------- Backup con set personalizzati ----------
   exportCollection = function () {
     try {
-      const blob = new Blob([JSON.stringify({ version: 3, exportedAt: new Date().toISOString(), cards: ownedCardsMap, customSets, overrides: ov }, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify({ version: 3, exportedAt: new Date().toISOString(), cards: ownedCardsMap, customSets, overrides: ov, manualSets: manual }, null, 2)], { type: 'application/json' });
       const u = URL.createObjectURL(blob), a = document.createElement('a');
       a.href = u; a.download = `pokellector-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u);
@@ -268,7 +268,7 @@
     const f = ev.target.files[0]; if (!f) return;
     const r = new FileReader();
     r.onload = () => {
-      try { const p = JSON.parse(r.result); if (p && Array.isArray(p.customSets)) { customSets = p.customSets; saveCustom(); } if (p && p.overrides) { ov = Object.assign({ sets: {}, cards: {} }, p.overrides); saveOv(); } } catch {}
+      try { const p = JSON.parse(r.result); if (p && Array.isArray(p.customSets)) { customSets = p.customSets; saveCustom(); } if (p && Array.isArray(p.manualSets)) { manual = p.manualSets; saveManual(); } if (p && p.overrides) { ov = Object.assign({ sets: {}, cards: {} }, p.overrides); saveOv(); } } catch {}
       _imp({ target: { files: [f], value: '' } }); ev.target.value = '';
     };
     r.readAsText(f);
@@ -421,7 +421,7 @@
   let prices = {}, pkRes = [], snapT;
   const qtyOf = c => Math.max(1, +c.qty || 1);
   const eur = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
-  const isWest = id => !/^(jp:|manual-|custom|imp-|legacy-)/.test(id) && !id.includes('#');
+  const isWest = id => !/^(jp:|man:|manual-|custom|imp-|legacy-)/.test(id) && !id.includes('#');
   const csvCell = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
   const download = (name, text, type) => { const u = URL.createObjectURL(new Blob(['\ufeff' + text], { type })), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1000); };
   const lbl = 'block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1';
@@ -482,7 +482,7 @@
   async function snapshot() {
     const n = Object.keys(ownedCardsMap).length; if (!n) return;
     const day = new Date().toISOString().slice(0, 10); let s = ((await kvGet('snaps')) || []).filter(x => x.day !== day);
-    s.unshift({ day, t: Date.now(), n, cards: ownedCardsMap, customSets, overrides: ov });
+    s.unshift({ day, t: Date.now(), n, cards: ownedCardsMap, customSets, overrides: ov, manualSets: manual });
     await kvSet('snaps', s.slice(0, 7)); if (!$('viewCollection').classList.contains('hidden')) renderSnaps();
   }
   const _sc = saveCollectionToStorage;
@@ -502,7 +502,7 @@
   window.pvRestore = async i => {
     const x = ((await kvGet('snaps')) || [])[i];
     if (!x || !confirm(`Ripristinare lo snapshot del ${formatDateIT(x.day)} (${x.n} carte)? La collezione attuale verrà sostituita.`)) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(x.cards)); customSets = x.customSets || []; saveCustom();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(x.cards)); customSets = x.customSets || []; saveCustom(); localStorage.setItem(MAN_KEY, JSON.stringify(x.manualSets || manual));
     await kvSet('overrides', x.overrides || { sets: {}, cards: {} }); location.reload();
   };
   window.pvCsv = () => {
@@ -619,6 +619,140 @@
     paintBanner(); renderStats();
   }
 
+  // ---------- Aggiornamento espansioni + creazione manuale di set ----------
+  const MAN_KEY = 'pokevault_manual_sets_v1';
+  let manual = [], ctimes = {}, msLogo = '';
+  try { manual = JSON.parse(localStorage.getItem(MAN_KEY)) || []; } catch { manual = []; }
+  const saveManual = () => { try { localStorage.setItem(MAN_KEY, JSON.stringify(manual)); } catch { showToast('Errore di salvataggio dei set manuali.', 'error'); } };
+  const stamp = k => { ctimes[k] = Date.now(); kvSet('ctimes', ctimes); };
+  // Le carte in cache di un set incompleto vengono riscaricate dopo 24 ore
+  function isStale(k, n) {
+    const s = k.startsWith('w:') ? allSets.find(x => x.id === k.slice(2)) : jpSets.find(x => x.id === k);
+    return n < (s ? (s.total || s.printedTotal || 0) : 0) && Date.now() - (ctimes[k] || 0) > 864e5;
+  }
+  const manSet = m => ({ id: m.id, name: m.name, base: m.base, series: m.series, total: m.total, printedTotal: m.total, releaseDate: m.releaseDate || '', images: { symbol: m.logo || '', logo: m.logo || '' }, manual: true });
+  const manualSets = r => manual.filter(m => m.region === r && !(r === 'jp' ? jpSets : allSets).some(s => s.id === m.id)).map(manSet);
+
+  const _r3 = renderSeriesDirectory;
+  renderSeriesDirectory = function () {
+    const sw = allSets, sj = jpSets;
+    allSets = sw.concat(manualSets('west')); jpSets = sj.concat(manualSets('jp'));
+    try { _r3(); } finally { allSets = sw; jpSets = sj; }
+  };
+  const syncMan = () => { const t = $('manToolbar'); if (!t) return; t.classList.toggle('hidden', !(currentSet && currentSet.manual)); $('manAddBtn').classList.toggle('hidden', !(currentSet && currentSet.id.startsWith('man:'))); };
+  const _o3 = openSetDetail;
+  openSetDetail = function (id) { const sw = allSets; allSets = sw.concat(manual.map(manSet)); const p = _o3(id); allSets = sw; syncMan(); return p; };
+  const _c3 = closeSetDetail;
+  closeSetDetail = function () { _c3(); syncMan(); };
+  const _pr3 = window.pvRegion;
+  window.pvRegion = async r => { await _pr3(r); syncMan(); };
+  const _lc3 = loadCardsForSet;
+  loadCardsForSet = async function (id) {
+    if (!id.startsWith('man:')) return _lc3(id);
+    const m = manual.find(x => x.id === id);
+    currentSetCards = (m && m.cards || []).map(c => ({ id: c.id, name: c.name, number: c.number, rarity: '', images: { small: c.image || ph(), large: c.image || ph() } }));
+    applyCards(currentSetCards); $('setCardsLoader').classList.add('hidden');
+  };
+  window.pvManAddCard = async () => {
+    const m = manual.find(x => x.id === currentSet.id); if (!m || !m.cards) return;
+    const name = prompt('Nome della carta?'); if (!name) return;
+    const num = prompt('Numero della carta?', String(m.cards.length + 1));
+    m.cards.push({ id: m.id + '#' + Date.now().toString(36), name: name.trim(), number: (num || '').trim() || String(m.cards.length + 1), image: '' });
+    m.total = m.cards.length; currentSet.total = m.total; saveManual();
+    await loadCardsForSet(m.id); updateSetDetailHeaderStats(); renderSetCardsGrid(); $('detailSetMeta').textContent = `${m.total} carte totali`;
+  };
+  window.pvManDelete = () => {
+    const m = manual.find(x => x.id === currentSet.id); if (!m || !confirm(`Eliminare il set «${currentSet.name}» e le sue carte flaggate?`)) return;
+    Object.keys(ownedCardsMap).forEach(k => { if (ownedCardsMap[k].setId === m.id) delete ownedCardsMap[k]; });
+    manual = manual.filter(x => x.id !== m.id); saveManual(); saveCollectionToStorage(); closeSetDetail();
+  };
+
+  // --- Crea set ---
+  window.pvLogoUrl = v => { msLogo = v.trim(); };
+  window.pvManClose = () => { $('pvManModal').classList.add('hidden'); $('pvManModal').classList.remove('flex'); };
+  window.pvManType = () => {
+    const r = $('msType').value;
+    $('msCatBox').classList.toggle('hidden', r !== 'jp');
+    const names = [...new Set((r === 'jp' ? jpSets.map(s => s.base) : allSets.map(s => s.series)).filter(Boolean))];
+    $('msBlocks').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
+  };
+  window.pvManOpen = () => {
+    $('pvManForm').reset(); msLogo = ''; $('msType').value = region === 'jp' ? 'jp' : 'west'; pvManType();
+    $('pvManModal').classList.remove('hidden'); $('pvManModal').classList.add('flex'); $('msName').focus();
+  };
+  window.pvManSave = e => {
+    e.preventDefault();
+    const r = $('msType').value, name = $('msName').value.trim(), block = $('msBlock').value.trim(), api = $('msApi').value.trim();
+    if (!name || !block) return;
+    const total = Math.max(0, parseInt($('msTotal').value, 10) || 0), id = api ? (r === 'jp' ? 'jp:' + api : api) : 'man:' + Date.now().toString(36);
+    if (manual.some(m => m.id === id) || (r === 'jp' ? jpSets : allSets).some(s => s.id === id)) return showToast('Esiste già un set con questo ID.', 'error');
+    if (r === 'jp') [`🇯🇵 ${block} · Set principali`, `🇯🇵 ${block} · Set speciali`].forEach(k => { if (!SERIES_ORDER.includes(k)) SERIES_ORDER.push(k); SERIES_LABELS[k] = k; });
+    manual.push({ id, region: r, name, base: block, series: r === 'jp' ? `🇯🇵 ${block} · ${$('msCat').value}` : block, releaseDate: $('msDate').value.replace(/-/g, '/'), total, logo: msLogo,
+      cards: api ? null : Array.from({ length: total }, (_, i) => ({ id: id + '#' + (i + 1), name: 'Carta ' + (i + 1), number: String(i + 1), image: '' })) });
+    saveManual(); pvManClose(); pvRegion(r === 'jp' ? 'jp' : 'west'); showToast(`Set «${name}» creato!`, 'success');
+  };
+
+  // --- Aggiornamento espansioni ---
+  window.pvUpdClose = () => { $('pvUpdModal').classList.add('hidden'); $('pvUpdModal').classList.remove('flex'); };
+  function showUpdates(found, manualRun) {
+    if (!found.length) { if (manualRun) showToast('Nessuna nuova espansione: sei aggiornato!', 'success'); return; }
+    $('pvUpdList').innerHTML = found.map(s => `<button onclick="pvUpdClose();openSetDetail('${s.id}')" class="w-full text-left px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-100">${esc(s.label)}</button>`).join('');
+    $('pvUpdModal').classList.remove('hidden'); $('pvUpdModal').classList.add('flex');
+  }
+  async function checkUpdates(manualRun) {
+    const btn = $('pvUpdBtn'), found = [];
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Controllo…'; }
+    if (manualRun) { ctimes = {}; kvDel('ctimes'); }
+    try {
+      const j = await getJson(`${API_BASE}/sets?orderBy=releaseDate`, 2);
+      if (j.data && j.data.length) {
+        const known = new Set(allSets.map(s => s.id));
+        j.data.filter(s => !known.has(s.id)).forEach(s => found.push({ id: s.id, label: '🌍 ' + s.name }));
+        allSets = j.data; localStorage.setItem(SETS_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: j.data }));
+      }
+    } catch { if (manualRun) showToast('Set occidentali: controllo non riuscito.', 'error'); }
+    const prev = jpSets;
+    if (prev.length) { // i set giapponesi si ricontrollano solo se già caricati
+      try {
+        const old = new Set(prev.map(s => s.id)); await kvDel('jp_sets'); jpSets = []; await loadJp();
+        jpSets.filter(s => !old.has(s.id)).forEach(s => found.push({ id: s.id, label: '🇯🇵 ' + s.name }));
+      } catch { jpSets = prev; if (manualRun) showToast('Set giapponesi: controllo non riuscito.', 'error'); }
+    }
+    localStorage.setItem('pv_last_check', Date.now());
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Aggiorna espansioni'; }
+    if (!currentSet && region !== 'custom' && region !== 'pokemon') renderSeriesDirectory();
+    showUpdates(found, manualRun);
+  }
+  window.pvCheckUpdates = checkUpdates;
+
+  async function initUpdates() {
+    ctimes = (await kvGet('ctimes')) || {};
+    const bc = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-60';
+    $('seriesJumpSelect').parentElement.insertAdjacentHTML('beforeend', `<button id="pvUpdBtn" onclick="pvCheckUpdates(true)" class="${bc}">🔄 Aggiorna espansioni</button><button onclick="pvManOpen()" class="${bc}">➕ Crea set</button>`);
+    const mt = document.createElement('div'); mt.id = 'manToolbar'; mt.className = 'hidden flex flex-wrap gap-2';
+    mt.innerHTML = `<button id="manAddBtn" onclick="pvManAddCard()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-pokeRed hover:bg-red-600 text-white shadow-md transition">➕ Aggiungi carta</button><button onclick="pvManDelete()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-red-600 hover:bg-red-50 dark:hover:bg-slate-700 transition">🗑️ Elimina set</button>`;
+    $('setCardSearchInput').parentElement.before(mt);
+    const head = (t, f) => `<div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60"><h2 class="text-lg font-extrabold text-slate-900 dark:text-white">${t}</h2><button type="button" onclick="${f}()" class="text-slate-400 hover:text-slate-600 text-lg leading-none">✕</button></div>`;
+    const wrap = 'fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 overflow-y-auto', box = 'bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto';
+    const um = document.createElement('div'); um.id = 'pvUpdModal'; um.className = wrap;
+    um.innerHTML = `<div class="${box}">${head('🎉 Nuove espansioni trovate', 'pvUpdClose')}<div id="pvUpdList" class="p-6 space-y-2 max-h-96 overflow-y-auto"></div></div>`;
+    const mm = document.createElement('div'); mm.id = 'pvManModal'; mm.className = wrap;
+    mm.innerHTML = `<form id="pvManForm" onsubmit="pvManSave(event)" class="${box}">${head('Crea set', 'pvManClose')}
+      <div class="p-6 space-y-3">
+        <div class="grid grid-cols-2 gap-3"><div><label class="${lbl}">Tipo</label><select id="msType" onchange="pvManType()" class="${inp} w-full"><option value="west">🌍 Occidentale</option><option value="jp">🇯🇵 Giapponese</option></select></div>
+        <div id="msCatBox" class="hidden"><label class="${lbl}">Categoria</label><select id="msCat" class="${inp} w-full"><option>Set principali</option><option>Set speciali</option></select></div></div>
+        <div><label class="${lbl}">Blocco di espansione *</label><input id="msBlock" required list="msBlocks" placeholder="Scegli uno esistente o scrivine uno nuovo" class="${inp} w-full"><datalist id="msBlocks"></datalist></div>
+        <div><label class="${lbl}">Nome del set *</label><input id="msName" required maxlength="80" class="${inp} w-full"></div>
+        <div class="grid grid-cols-2 gap-3"><div><label class="${lbl}">Data di uscita</label><input id="msDate" type="date" class="${inp} w-full"></div><div><label class="${lbl}">Numero carte</label><input id="msTotal" type="number" min="0" value="0" class="${inp} w-full"></div></div>
+        <div><label class="${lbl}">ID del set nel catalogo (opzionale)</label><input id="msApi" placeholder="es. sv3pt5 — le carte si caricano da sole" class="${inp} w-full"><p class="text-[11px] text-slate-400 mt-1">Senza ID il set viene creato con carte numerate da rinominare e illustrare con ✏️.</p></div>
+        <div><label class="${lbl}">Logo del set</label><div class="flex gap-2"><input id="msLogoUrl" placeholder="URL immagine" class="${inp} flex-1" oninput="pvLogoUrl(this.value)"><input id="msLogoFile" type="file" accept="image/*" class="${inp} w-40 text-xs"></div></div>
+      </div>
+      <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2"><button type="button" onclick="pvManClose()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Annulla</button><button class="px-5 py-2 rounded-xl text-sm font-bold bg-pokeRed hover:bg-red-600 text-white shadow-md">Crea</button></div></form>`;
+    document.body.append(um, mm);
+    $('msLogoFile').onchange = async e => { const f = e.target.files[0]; if (f) { try { msLogo = await fileToData(f, 240); $('msLogoUrl').value = ''; } catch { showToast('Immagine non leggibile.', 'error'); } } };
+    if (Date.now() - (+localStorage.getItem('pv_last_check') || 0) > 864e5) setTimeout(() => checkUpdates(false), 6000);
+  }
+
   // ---------- Inizializzazione UI ----------
   function init() {
     try { customSets = JSON.parse(localStorage.getItem(CUSTOM_KEY)) || []; } catch { customSets = []; }
@@ -660,7 +794,7 @@
       </div></div>`;
     document.body.appendChild(m);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') pvCloseAdd(); });
-    paintBar(); initEdit(); initFeatures();
+    paintBar(); initEdit(); initFeatures(); initUpdates();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
